@@ -101,7 +101,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 (mla-add-subfolders-to-load-path mla-vendor-dir)
 
 (setq custom-file (expand-file-name "custom.el" mla-personal-dir))
-
+ (load custom-file)
 
 ;; reduce the frequency of garbage collection by making it happen on
 ;; each 50MB of allocated data (the default is on every 0.76MB)
@@ -208,6 +208,17 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 (setq tab-always-indent 'complete)
 
 
+(recentf-mode 1)
+(add-hook 'prog-mode-hook 'display-line-numbers-mode)
+(add-hook 'prog-mode-hook 'hl-line-mode)
+
+
+
+(use-package diminish
+  :ensure t)
+
+(use-package delight
+  :ensure t)
 
 ;;; built-in packages
 (use-package paren
@@ -224,6 +235,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   (global-hl-line-mode +1))
 
 (use-package abbrev
+  :delight abbrev-mode
   :config
   (setq save-abbrevs 'silently)
   (setq-default abbrev-mode t))
@@ -301,10 +313,6 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   :config
   (global-hl-line-mode +1))
 
-(use-package abbrev
-  :config
-  (setq save-abbrevs 'silently)
-  (setq-default abbrev-mode t))
 
 (use-package uniquify
   :config
@@ -376,6 +384,15 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   :ensure t
   :init (which-key-mode +1))
 
+(use-package eldoc
+  :ensure t
+  :defer t
+  :diminish eldoc-mode
+  :config
+  (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
+  (add-hook 'lisp-interaction-mode-hook 'turn-on-eldoc-mode)
+  (add-hook 'ielm-mode-hook 'turn-on-eldoc-mode))
+
 (use-package lisp-mode
   :after
     (rainbow-delimiter-mode)
@@ -417,6 +434,7 @@ Start `ielm' if it's not already running."
 
 (use-package helm
   :ensure t
+  :diminish helm-mode
   :init
   (require 'shell)
   :config
@@ -501,7 +519,7 @@ Start `ielm' if it's not already running."
   :init
   (setq projectile-completion-system 'helm)
   :config
-  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (projectile-mode +1)
   :delight '(:eval (concat " " (projectile-project-name)))
   )
@@ -519,11 +537,13 @@ Start `ielm' if it's not already running."
   :ensure t)
 
 (use-package rainbow-mode
+  :delight
   :ensure t
   :config
   (add-hook 'prog-mode-hook #'rainbow-mode))
 
 (use-package whitespace
+  :delight whitespace-mode
   :init
   (dolist (hook '(prog-mode-hook text-mode-hook))
     (add-hook hook #'whitespace-mode))
@@ -556,6 +576,7 @@ Start `ielm' if it's not already running."
   :ensure t)
 
 (use-package company
+  :diminish company-mode
   :ensure t
   :config
   (setq company-idle-delay 0.5)
@@ -631,9 +652,13 @@ Start `ielm' if it's not already running."
 
 
 (use-package go-mode
+  :hook (go-mode . ws-no-tabs-highlight)
   :ensure t)
 
-(add-hook 'go-mode-hook #'ws-no-tabs-highlight)
+
+;  (local-set-key (kbd "M-.") #'rtags-find-symbol-at-point)
+;  (local-set-key (kbd "s-.") #'rtags-find-references-at-point)
+ ; (local-set-key (kbd "M-,") #'rtags-location-stack-back)
 
 (use-package lsp-mode
   :ensure t
