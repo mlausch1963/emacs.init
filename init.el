@@ -40,6 +40,8 @@
 ;(package-initialize)
 
 
+;; Take a look at https://github.com/danielmartin/dotfiles/blob/master/.emacs.d/init.el
+
 (defvar current-user
   (getenv
    (if (equal system-type 'windows-nt) "USERNAME" "USER")))
