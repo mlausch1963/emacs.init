@@ -372,6 +372,9 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   (require 'dired-x))
 
 
+(use-package which-key
+  :ensure t
+  :init (which-key-mode +1))
 
 (use-package lisp-mode
   :after
@@ -397,7 +400,6 @@ Start `ielm' if it's not already running."
   (add-hook 'ielm-mode-hook #'rainbow-delimiters-mode))
 
 
-
 (use-package solarized-theme
   :ensure t
   :config
@@ -416,39 +418,60 @@ Start `ielm' if it's not already running."
 (use-package helm
   :ensure t
   :init
-    (setq helm-split-window-default-side 'other)
-    (helm-mode 1)
+  (require 'shell)
   :config
-    (define-key helm-find-files-map
-      (kbd "<backtab>") #'helm-select-action)
-    (define-key helm-find-files-map
-      (kbd "C-i")  #'helm-execute-persistent-action)
-    :bind
-      (("M-x" . helm-M-x)
-       ("M-y" . helm-show-kill-ring)
-       ("C-x C-f" . helm-find-files)
-       ("C-x f" . helm-recentf)
-       ("C-c o" . helm-occur)
-       ("C-x b" . helm-mini)
-       ("C-x r b" . helm-bookmarks)
-       ("C-h a" . helm-apropos)
-       ("C-h d" . helm-info-at-point)
-       ("C-c L" . helm-locate)
-       ("C-c r" . helm-resume)
-       ("C-c i" . helm-imenu))
-      :bind (:map helm-map
-                  ("M-i" . helm-previous-line)
-                  ("M-k" . helm-next-line)
-                  ("M-I" . helm-previous-page)
-                  ("M-K" . helm-next-page)
-                  ("M-h" . helm-beginning-of-buffer)
-                  ("M-H" . helm-end-of-buffer)))
+  (require 'helm-config)
+  (setq projectile-completion-system 'helm)
+  (setq helm-split-window-in-side-p         t
+      helm-buffers-fuzzy-matching           t
+      helm-move-to-line-cycle-in-source     t
+      helm-ff-search-library-in-sexp        t
+      helm-ff-file-name-history-use-recentf t
+      helm-split-window-default-side        'other)
+  (global-unset-key (kbd "C-x c"))
+  (helm-mode 1)
+  (helm-projectile-on)
+  :hook (eshell-mode . (lambda ()
+                         (substitute-key-definition 'eshell-list-history 'helm-eshell-history eshell-mode-map)))
+  :bind-keymap
+  ("C-c h" . helm-command-prefix)
+  :bind
+  (("M-x" . helm-M-x)
+   ("M-y" . helm-show-kill-ring)
+   ("C-x C-f" . helm-find-files)
+   ("C-x f" . helm-recentf)
+   ("C-c o" . helm-occur)
+   ("C-x b" . helm-mini)
+   ("C-x C-b" . helm-buffers-list)
+   ("C-h f" . helm-apropos)
+   ("C-h r" . helm-info-emacs)
+   ("C-c C-l" . helm-locate-library))
+  :bind (:map isearch-mode-map
+              ("C-o" . 'helm-occur-from-isearch))
+  :bind (:map shell-mode-map
+              ("C-c C-l" . helm-comint-input-ring))
+  :bind (:map minibuffer-local-map
+              ("C-c C-l" . helm-minibuffer-history))
+  :bind (:map helm-command-map
+              ("o" . helm-occur)
+              ("g" . helm-do-grep)
+              ("C-c w" . helm-wikipedia-suggest)
+              ("SPC" . 'helm-all-mark-rings))
+  :bind (:map helm-map
+              ("<tab>" . helm-execute-persistent-action)
+              ("C-z" . helm-select-action)
+              ("M-i" . helm-previous-line)
+              ("M-k" . helm-next-line)
+              ("M-I" . helm-previous-page)
+              ("M-K" . helm-next-page)
+              ("M-h" . helm-beginning-of-buffer)
+              ("M-H" . helm-end-of-buffer)))
 
 (use-package helm-swoop
   :ensure t
   :bind
   (("C-s" . helm-swoop-without-pre-input)
-   ("C-S-s" . helm-swoop)))
+   ("C-s-s" . helm-swoop)))
 
 (use-package helm-descbinds
   :ensure t
