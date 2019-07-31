@@ -26,7 +26,7 @@
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 ;;
-;; You should have received a copy of the GNU General Public License
+;; You should have received a cfopy of the GNU General Public License
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;; Boston, MA 02110-1301, USA.
@@ -416,25 +416,33 @@ Start `ielm' if it's not already running."
 (use-package helm
   :ensure t
   :init
-  (setq helm-split-window-default-side 'other)
-  (helm-mode 1)
-:config
-  (define-key helm-find-files-map
-    (kbd "<backtab>") #'helm-select-action)
-  (define-key helm-find-files-map
-    (kbd "C-i")  #'helm-execute-persistent-action)
-  :bind
-  (("M-x" . helm-M-x)
-   ("M-y" . helm-show-kill-ring)
-   ("C-x C-f" . helm-find-files)
-   ("C-c o" . helm-occur)
-   ("C-x b" . helm-mini)
-   ("C-x r b" . helm-bookmarks)
-   ("C-h a" . helm-apropos)
-   ("C-h d" . helm-info-at-point)
-   ("C-c L" . helm-locate)
-   ("C-c r" . helm-resume)
-   ("C-c i" . helm-imenu)))
+    (setq helm-split-window-default-side 'other)
+    (helm-mode 1)
+  :config
+    (define-key helm-find-files-map
+      (kbd "<backtab>") #'helm-select-action)
+    (define-key helm-find-files-map
+      (kbd "C-i")  #'helm-execute-persistent-action)
+    :bind
+      (("M-x" . helm-M-x)
+       ("M-y" . helm-show-kill-ring)
+       ("C-x C-f" . helm-find-files)
+       ("C-x f" . helm-recentf)
+       ("C-c o" . helm-occur)
+       ("C-x b" . helm-mini)
+       ("C-x r b" . helm-bookmarks)
+       ("C-h a" . helm-apropos)
+       ("C-h d" . helm-info-at-point)
+       ("C-c L" . helm-locate)
+       ("C-c r" . helm-resume)
+       ("C-c i" . helm-imenu))
+      :bind (:map helm-map
+                  ("M-i" . helm-previous-line)
+                  ("M-k" . helm-next-line)
+                  ("M-I" . helm-previous-page)
+                  ("M-K" . helm-next-page)
+                  ("M-h" . helm-beginning-of-buffer)
+                  ("M-H" . helm-end-of-buffer)))
 
 (use-package helm-swoop
   :ensure t
@@ -474,6 +482,9 @@ Start `ielm' if it's not already running."
   (projectile-mode +1)
   :delight '(:eval (concat " " (projectile-project-name)))
   )
+
+(use-package helm-projectile
+  :ensure t)
 
 (use-package exec-path-from-shell
   :ensure t
