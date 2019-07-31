@@ -1,0 +1,676 @@
+;;; init.el --- Prelude's configuration entry point.
+;;
+;; Copyright (c) 2011-2018 Bozhidar Batsov
+;;
+;; Author: Bozhidar Batsov <bozhidar@batsov.com>
+;; URL: http://batsov.com/prelude
+;; Version: 1.0.0
+;; Keywords: convenience
+
+;; This file is not part of GNU Emacs.
+
+;;; Commentary:
+
+;; This file simply sets up the default load path and requires
+;; the various modules defined within Emacs Prelude.
+
+;;; License:
+
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License
+;; as published by the Free Software Foundation; either version 3
+;; of the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
+
+;;; Code:
+
+;; Added by Package.el.  This must come before configurations of
+;; installed packages.  Don't delete this line.  If you don't want it,
+;; just comment it out by adding a semicolon to the start of the line.
+;; You may delete these explanatory comments.
+;(package-initialize)
+
+
+(defvar current-user
+  (getenv
+   (if (equal system-type 'windows-nt) "USERNAME" "USER")))
+
+(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
+
+(message "Mla is powering up... Be patient, Master %s!" current-user)
+
+(when (version< emacs-version "25.1")
+  (error "Mla requires GNU Emacs 25.1 or newer, but you're running %s" emacs-version))
+
+;; Always load newest byte code
+(setq load-prefer-newer t)
+
+(defvar mla-dir (file-name-directory load-file-name)
+  "The root dir of the Emacs Mla distribution.")
+(defvar mla-core-dir (expand-file-name "core" mla-dir)
+  "The home of Mla's core functionality.")
+(defvar mla-modules-dir (expand-file-name  "modules" mla-dir)
+  "This directory houses all of the built-in Mla modules.")
+(defvar mla-personal-dir (expand-file-name "personal" mla-dir)
+  "This directory is for your personal configuration.
+
+Users of Emacs Mla are encouraged to keep their personal configuration
+changes in this directory.  All Emacs Lisp files there are loaded automatically
+by Mla.")
+(defvar mla-personal-preload-dir (expand-file-name "preload" mla-personal-dir)
+  "This directory is for your personal configuration, that you want loaded before Mla.")
+(defvar mla-vendor-dir (expand-file-name "vendor" mla-dir)
+  "This directory houses packages that are not yet available in ELPA (or MELPA).")
+(defvar mla-savefile-dir (expand-file-name "savefile" mla-dir)
+  "This folder stores all the automatically generated save/history-files.")
+(defvar mla-modules-file (expand-file-name "mla-modules.el" mla-personal-dir)
+  "This file contains a list of modules that will be loaded by Mla.")
+(defvar mla-deprecated-modules-file
+  (expand-file-name "mla-modules.el" mla-dir)
+  (format "This file may contain a list of Mla modules.
+
+This is DEPRECATED, use %s instead." mla-modules-file))
+
+(unless (file-exists-p mla-savefile-dir)
+  (make-directory mla-savefile-dir))
+
+(defun mla-add-subfolders-to-load-path (parent-dir)
+ "Add all level PARENT-DIR subdirs to the `load-path'."
+ (dolist (f (directory-files parent-dir))
+   (let ((name (expand-file-name f parent-dir)))
+     (when (and (file-directory-p name)
+                (not (string-prefix-p "." f)))
+       (add-to-list 'load-path name)
+       (mla-add-subfolders-to-load-path name)))))
+
+;; add Mla's directories to Emacs's `load-path'
+(add-to-list 'load-path mla-core-dir)
+(add-to-list 'load-path mla-modules-dir)
+(add-to-list 'load-path mla-vendor-dir)
+(mla-add-subfolders-to-load-path mla-vendor-dir)
+
+(setq custom-file (expand-file-name "custom.el" mla-personal-dir))
+
+
+;; reduce the frequency of garbage collection by making it happen on
+;; each 50MB of allocated data (the default is on every 0.76MB)
+(setq gc-cons-threshold 50000000)
+
+;; warn when opening files bigger than 100MB
+(setq large-file-warning-threshold 100000000)
+
+(require 'package)
+(add-to-list 'package-archives '("gnu". "https://elpa.gnu.org/packages/"))
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+
+;; keep the installed packages in .emacs.d
+(setq package-user-dir (expand-file-name "elpa" user-emacs-directory))
+
+(package-initialize)
+;; update the package metadata is the local cache is missing
+
+(unless package-archive-contents
+  (package-refresh-contents))
+
+(unless (package-installed-p 'use-package)
+  (package-install 'use-package))
+
+(require 'use-package)
+(setq use-package-verbose t)
+
+(when (fboundp 'tool-bar-mode)
+  (tool-bar-mode -1))
+
+;; the blinking cursor is nothing, but an annoyance
+(blink-cursor-mode -1)
+
+;; disable the annoying bell ring
+(setq ring-bell-function 'ignore)
+
+;; disable startup screen
+(setq inhibit-startup-screen t)
+
+;; nice scrolling
+(setq scroll-margin 0
+      scroll-conservatively 100000
+      scroll-preserve-screen-position 1)
+
+;; mode line settings
+(line-number-mode t)
+(column-number-mode t)
+(size-indication-mode t)
+
+;; enable y/n answers
+(fset 'yes-or-no-p 'y-or-n-p)
+
+;; more useful frame title, that show either a file or a
+;; buffer name (if the buffer isn't visiting a file)
+(setq frame-title-format
+      '((:eval (if (buffer-file-name)
+                   (abbreviate-file-name (buffer-file-name))
+                 "%b"))))
+
+;; Emacs modes typically provide a standard means to change the
+;; indentation width -- eg. c-basic-offset: use that to adjust your
+;; personal indentation width, while maintaining the style (and
+;; meaning) of any files you load.
+(setq-default indent-tabs-mode nil)   ;; don't use tabs to indent
+(setq-default tab-width 8)            ;; but maintain correct appearance
+
+;; Newline at end of file
+(setq require-final-newline t)
+
+;; Wrap lines at 80 characters
+(setq-default fill-column 80)
+
+;; delete the selection with a keypress
+(delete-selection-mode t)
+
+;; store all backup and autosave files in the tmp dir
+(setq backup-directory-alist
+      `((".*" . ,temporary-file-directory)))
+(setq auto-save-file-name-transforms
+      `((".*" ,temporary-file-directory t)))
+
+;; revert buffers automatically when underlying files are changed externally
+(global-auto-revert-mode t)
+
+(prefer-coding-system 'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+
+
+
+(global-set-key (kbd "C-x C-b") #'ibuffer)
+
+;; align code in a pretty way
+(global-set-key (kbd "C-x \\") #'align-regexp)
+
+;; misc useful keybindings
+(global-set-key (kbd "s-<") #'beginning-of-buffer)
+(global-set-key (kbd "s->") #'end-of-buffer)
+(global-set-key (kbd "s-q") #'fill-paragraph)
+(global-set-key (kbd "s-x") #'execute-extended-command)
+
+                                        ; smart tab behavior - indent or complete
+(setq tab-always-indent 'complete)
+
+
+
+;;; built-in packages
+(use-package paren
+  :config
+  (show-paren-mode +1))
+
+(use-package elec-pair
+  :config
+  (electric-pair-mode +1))
+
+;; highlight the current line
+(use-package hl-line
+  :config
+  (global-hl-line-mode +1))
+
+(use-package abbrev
+  :config
+  (setq save-abbrevs 'silently)
+  (setq-default abbrev-mode t))
+
+(use-package uniquify
+  :config
+  (setq uniquify-buffer-name-style 'forward)
+  (setq uniquify-separator "/")
+  ;; rename after killing uniquified
+  (setq uniquify-after-kill-buffer-p t)
+  ;; don't muck with special buffers
+  (setq uniquify-ignore-buffers-re "^\\*"))
+
+;; saveplace remembers your location in a file when saving files
+(use-package saveplace
+  :config
+  (setq save-place-file (expand-file-name "saveplace" mla-savefile-dir))
+  ;; activate it for all buffers
+  (setq-default save-place t))
+
+(use-package savehist
+  :config
+  (setq savehist-additional-variables
+        ;; search entries
+        '(search-ring regexp-search-ring)
+        ;; save every minute
+        savehist-autosave-interval 60
+        ;; keep the home clean
+        savehist-file (expand-file-name "savehist" mla-savefile-dir))
+  (savehist-mode +1))
+
+(use-package recentf
+  :config
+  (setq recentf-save-file (expand-file-name "recentf" mla-savefile-dir)
+        recentf-max-saved-items 500
+        recentf-max-menu-items 15
+        ;; disable recentf-cleanup on Emacs start, because it can cause
+        ;; problems with remote files
+        recentf-auto-cleanup 'never)
+  (recentf-mode +1))
+
+(use-package windmove
+  :config
+  ;; use shift + arrow keys to switch between visible buffers
+  (windmove-default-keybindings))
+
+(use-package dired
+  :config
+  ;; dired - reuse current buffer by pressing 'a'
+  (put 'dired-find-alternate-file 'disabled nil)
+
+  ;; always delete and copy recursively
+  (setq dired-recursive-deletes 'always)
+  (setq dired-recursive-copies 'always)
+
+  ;; if there is a dired buffer displayed in the next window, use its
+  ;; current subdir, instead of the current subdir of this dired buffer
+  (setq dired-dwim-target t)
+
+  ;; enable some really cool extensions like C-x C-j(dired-jump)
+  (require 'dired-x))
+
+
+;;; built-in packages
+(use-package paren
+  :config
+  (show-paren-mode +1))
+
+(use-package elec-pair
+  :config
+  (electric-pair-mode +1))
+
+;; highlight the current line
+(use-package hl-line
+  :config
+  (global-hl-line-mode +1))
+
+(use-package abbrev
+  :config
+  (setq save-abbrevs 'silently)
+  (setq-default abbrev-mode t))
+
+(use-package uniquify
+  :config
+  (setq uniquify-buffer-name-style 'forward)
+  (setq uniquify-separator "/")
+  ;; rename after killing uniquified
+  (setq uniquify-after-kill-buffer-p t)
+  ;; don't muck with special buffers
+  (setq uniquify-ignore-buffers-re "^\\*"))
+
+;; saveplace remembers your location in a file when saving files
+(use-package saveplace
+  :config
+  (setq save-place-file (expand-file-name "saveplace" mla-savefile-dir))
+  ;; activate it for all buffers
+  (setq-default save-place t))
+
+(use-package savehist
+  :config
+  (setq savehist-additional-variables
+        ;; search entries
+        '(search-ring regexp-search-ring)
+        ;; save every minute
+        savehist-autosave-interval 60
+        ;; keep the home clean
+        savehist-file (expand-file-name "savehist" mla-savefile-dir))
+  (savehist-mode +1))
+
+(use-package recentf
+  :config
+  (setq recentf-save-file (expand-file-name "recentf" mla-savefile-dir)
+        recentf-max-saved-items 500
+        recentf-max-menu-items 15
+        ;; disable recentf-cleanup on Emacs start, because it can cause
+        ;; problems with remote files
+        recentf-auto-cleanup 'never)
+  (recentf-mode +1))
+
+(use-package windmove
+  :config
+  ;; use shift + arrow keys to switch between visible buffers
+  (windmove-default-keybindings))
+
+(use-package edit-server
+  :if window-system
+  :init
+  (add-hook 'after-init-hook 'server-start t)
+  (add-hook 'after-init-hook 'edit-server-start t))
+
+(use-package dired
+  :config
+  ;; dired - reuse current buffer by pressing 'a'
+  (put 'dired-find-alternate-file 'disabled nil)
+
+  ;; always delete and copy recursively
+  (setq dired-recursive-deletes 'always)
+  (setq dired-recursive-copies 'always)
+
+  ;; if there is a dired buffer displayed in the next window, use its
+  ;; current subdir, instead of the current subdir of this dired buffer
+  (setq dired-dwim-target t)
+
+  ;; enable some really cool extensions like C-x C-j(dired-jump)
+  (require 'dired-x))
+
+
+
+(use-package lisp-mode
+  :config
+  (defun mla-visit-ielm ()
+    "Switch to default `ielm' buffer.
+Start `ielm' if it's not already running."
+    (interactive)
+    (crux-start-or-switch-to 'ielm "*ielm*"))
+  (add-hook 'emacs-lisp-mode-hook #'eldoc-mode)
+  (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
+  (define-key emacs-lisp-mode-map (kbd "C-c C-z") #'mla-visit-ielm)
+  (define-key emacs-lisp-mode-map (kbd "C-c C-c") #'eval-defun)
+  (define-key emacs-lisp-mode-map (kbd "C-c C-b") #'eval-buffer)
+  (add-hook 'lisp-interaction-mode-hook #'eldoc-mode)
+  (add-hook 'eval-expression-minibuffer-setup-hook #'eldoc-mode))
+
+
+(use-package ielm
+  :config
+  (add-hook 'ielm-mode-hook #'eldoc-mode)
+  (add-hook 'ielm-mode-hook #'rainbow-delimiters-mode))
+
+
+
+(use-package solarized-theme
+  :ensure t
+  :config
+  (load-theme 'solarized-dark t)
+  )
+
+(use-package smart-mode-line
+  :ensure t
+  :config
+  (load-theme 'smart-mode-line-dark t))
+
+(use-package magit
+  :ensure t
+  :bind (("s-g" . magit-status)))
+
+(use-package helm
+  :ensure t
+  :init
+  (setq helm-split-window-default-side 'other)
+  (helm-mode 1)
+:config
+  (define-key helm-find-files-map
+    (kbd "<backtab>") #'helm-select-action)
+  (define-key helm-find-files-map
+    (kbd "C-i")  #'helm-execute-persistent-action)
+  :bind
+  (("M-x" . helm-M-x)
+   ("M-y" . helm-show-kill-ring)
+   ("C-x C-f" . helm-find-files)
+   ("C-c o" . helm-occur)
+   ("C-x b" . helm-mini)
+   ("C-x r b" . helm-bookmarks)
+   ("C-h a" . helm-apropos)
+   ("C-h d" . helm-info-at-point)
+   ("C-c L" . helm-locate)
+   ("C-c r" . helm-resume)
+   ("C-c i" . helm-imenu)))
+
+(use-package helm-swoop
+  :ensure t
+  :bind
+  (("C-s" . helm-swoop-without-pre-input)
+   ("C-S-s" . helm-swoop)))
+
+(use-package helm-descbinds
+  :ensure t
+  :init
+  (helm-descbinds-mode))
+
+(use-package helm-git-grep
+  :ensure t
+  :bind
+  (("C-c j" . helm-git-grep)
+   ("C-c J" . helm-git-grep-at-point)))
+
+(use-package helm-ls-git
+  :ensure t
+  :bind
+  (("C-c g" . helm-ls-git-ls)))
+
+(use-package helm-make
+  :ensure t
+  :bind
+  (("C-c K" . helm-make)))
+
+
+
+(use-package projectile
+  :ensure t
+  :init
+  (setq projectile-completion-system 'helm)
+  :config
+  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+  (projectile-mode +1)
+  :delight '(:eval (concat " " (projectile-project-name)))
+  )
+
+(use-package exec-path-from-shell
+  :ensure t
+  :config
+  (when (memq window-system '(mac ns))
+    (exec-path-from-shell-initialize)))
+
+(use-package rainbow-delimiters
+  :ensure t)
+
+(use-package rainbow-mode
+  :ensure t
+  :config
+  (add-hook 'prog-mode-hook #'rainbow-mode))
+
+(use-package whitespace
+  :init
+  (dolist (hook '(prog-mode-hook text-mode-hook))
+    (add-hook hook #'whitespace-mode))
+  (add-hook 'before-save-hook #'whitespace-cleanup)
+  :config
+  (setq whitespace-line-column 80) ;; limit line length
+  (setq whitespace-style '(face tabs empty trailing lines-tail)))
+
+
+(use-package markdown-mode
+  :ensure t
+  :mode (("\\.md\\'" . gfm-mode)
+         ("\\.markdown\\'" . gfm-mode))
+  :config
+  (setq markdown-fontify-code-blocks-natively t)
+  :preface
+  (defun jekyll-insert-image-url ()
+    (interactive)
+    (let* ((files (directory-files "../assets/images"))
+           (selected-file (completing-read "Select image: " files nil t)))
+      (insert (format "![%s](/assets/images/%s)" selected-file selected-file))))
+
+  (defun jekyll-insert-post-url ()
+    (interactive)
+    (let* ((files (remove "." (mapcar #'file-name-sans-extension (directory-files "."))))
+           (selected-file (completing-read "Select article: " files nil t)))
+      (insert (format "{%% post_url %s %%}" selected-file)))))
+
+(use-package yaml-mode
+  :ensure t)
+
+(use-package company
+  :ensure t
+  :config
+  (setq company-idle-delay 0.5)
+  (setq company-show-numbers t)
+  (setq company-tooltip-limit 10)
+  (setq company-minimum-prefix-length 2)
+  (setq company-tooltip-align-annotations t)
+  ;; invert the navigation direction if the the completion popup-isearch-match
+  ;; is displayed on top (happens near the bottom of windows)
+  (setq company-tooltip-flip-when-above t)
+  (global-company-mode))
+
+
+(if (executable-find "rg")
+    (use-package rg
+      :ensure t
+      :bind
+      (("C-c R" . rg))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; C/C++ Mode
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package google-c-style
+  :ensure t
+  )
+
+(c-add-style "google-c-style" google-c-style)
+(setq-default c-basic-offset 4)
+(setq c-default-style '((java-mode . "java")
+                        (awk-mode . "awk")
+                        (c++-mode . "google-c-style")
+                        (other . "google-c-style")))
+
+(defun ws-no-tabs-highlight ()
+  (interactive)
+  (setq whitespace-style (remove 'tabs whitespace-style))
+  (whitespace-mode 0)
+  (whitespace-mode 1)
+  )
+
+
+(defun mla-c-mode-keys ()
+  (local-set-key (kbd "M-.") #'rtags-find-symbol-at-point)
+  (local-set-key (kbd "s-.") #'rtags-find-references-at-point)
+  (local-set-key (kbd "M-,") #'rtags-location-stack-back)
+  (local-set-key "\C-i" #'company-indent-or-complete-common)
+  (local-set-key (kbd "<tab>") #'company-indent-or-complete-common)
+  )
+
+(defun mla-c-mode-minor-modes ()
+  (rainbow-mode 0))
+
+(add-hook 'c-mode-common-hook #'ws-no-tabs-highlight)
+(add-hook 'c-mode-common-hook #'mla-c-mode-keys)
+(add-hook 'c-mode-common-hook #'mla-c-mode-minor-modes)
+
+
+(use-package rtags
+  :ensure t
+  :defer
+  :config
+  (rtags-enable-standard-keybindings nil "C-c R"))
+
+(use-package company-rtags
+  :ensure t
+  :defer)
+
+
+(use-package treemacs
+  :ensure t
+  :defer t
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :config
+  (progn
+    (setq treemacs-collapse-dirs                 (if (treemacs--find-python3) 3 0)
+          treemacs-deferred-git-apply-delay      0.5
+          treemacs-display-in-side-window        t
+          treemacs-eldoc-display                 t
+          treemacs-file-event-delay              5000
+          treemacs-file-follow-delay             0.2
+          treemacs-follow-after-init             t
+          treemacs-git-command-pipe              ""
+          treemacs-goto-tag-strategy             'refetch-index
+          treemacs-indentation                   2
+          treemacs-indentation-string            " "
+          treemacs-is-never-other-window         nil
+          treemacs-max-git-entries               5000
+          treemacs-missing-project-action        'ask
+          treemacs-no-png-images                 nil
+          treemacs-no-delete-other-windows       t
+          treemacs-project-follow-cleanup        nil
+          treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+          treemacs-position                      'left
+          treemacs-recenter-distance             0.1
+          treemacs-recenter-after-file-follow    nil
+          treemacs-recenter-after-tag-follow     nil
+          treemacs-recenter-after-project-jump   'always
+          treemacs-recenter-after-project-expand 'on-distance
+          treemacs-show-cursor                   nil
+          treemacs-show-hidden-files             t
+          treemacs-silent-filewatch              nil
+          treemacs-silent-refresh                nil
+          treemacs-sorting                       'alphabetic-desc
+          treemacs-space-between-root-nodes      t
+          treemacs-tag-follow-cleanup            t
+          treemacs-tag-follow-delay              1.5
+          treemacs-width                         35)
+
+    ;; The default width and height of the icons is 22 pixels. If you are
+    ;; using a Hi-DPI display, uncomment this to double the icon size.
+    ;;(treemacs-resize-icons 44)
+
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-fringe-indicator-mode t)
+    (pcase (cons (not (null (executable-find "git")))
+                 (not (null (treemacs--find-python3))))
+      (`(t . t)
+       (treemacs-git-mode 'deferred))
+      (`(t . _)
+       (treemacs-git-mode 'simple))))
+  :bind
+  (:map global-map
+        ("M-0"       . treemacs-select-window)
+        ("C-x t 1"   . treemacs-delete-other-windows)
+        ("C-x t t"   . treemacs)
+        ("C-x t B"   . treemacs-bookmark)
+        ("C-x t C-t" . treemacs-find-file)
+        ("C-x t M-t" . treemacs-find-tag)))
+
+(use-package treemacs-evil
+  :disabled
+  :after treemacs evil
+  :ensure t)
+
+(use-package treemacs-projectile
+  :after treemacs projectile
+  :ensure t)
+
+(use-package treemacs-icons-dired
+  :after treemacs dired
+  :ensure t
+  :config (treemacs-icons-dired-mode))
+
+(use-package treemacs-magit
+  :after treemacs magit
+  :ensure t)
+
+
+;;; init.el ends here
+(put 'erase-buffer 'disabled nil)
