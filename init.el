@@ -347,6 +347,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   (windmove-default-keybindings))
 
 (use-package edit-server
+  :ensure t
   :if window-system
   :init
   (add-hook 'after-init-hook 'server-start t)
@@ -371,6 +372,8 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 
 
 (use-package lisp-mode
+  :after
+    (rainbow-delimiter-mode)
   :config
   (defun mla-visit-ielm ()
     "Switch to default `ielm' buffer.
@@ -537,6 +540,8 @@ Start `ielm' if it's not already running."
       (("C-c R" . rg))))
 
 
+(use-package yasnippet
+  :ensure t)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; C/C++ Mode
@@ -587,6 +592,39 @@ Start `ielm' if it's not already running."
 (use-package company-rtags
   :ensure t
   :defer)
+
+
+(use-package go-mode
+  :ensure t)
+
+(add-hook 'go-mode-hook #'ws-no-tabs-highlight)
+
+(use-package lsp-mode
+  :ensure t
+  :hook (go-mode . lsp)
+  :commands lsp)
+
+
+(use-package lsp-ui
+  :ensure t
+  :commands lsp-ui-mode)
+
+(use-package company-lsp
+  :ensure t
+  :commands company-lsp)
+
+(use-package helm-lsp
+  :ensure t
+  :commands helm-lsp-workspace-symbol)
+
+(use-package lsp-treemacs
+  :ensure t
+  :commands lsp-treemacs-errors-list)
+
+(use-package dap-mode
+  :ensure t)
+
+(require 'dap-go)
 
 
 (use-package treemacs
@@ -670,6 +708,8 @@ Start `ielm' if it's not already running."
 (use-package treemacs-magit
   :after treemacs magit
   :ensure t)
+
+
 
 
 ;;; init.el ends here
