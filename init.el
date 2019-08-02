@@ -660,14 +660,35 @@ Start `ielm' if it's not already running."
 ;  (local-set-key (kbd "s-.") #'rtags-find-references-at-point)
  ; (local-set-key (kbd "M-,") #'rtags-location-stack-back)
 
+(use-package flycheck
+  :ensure t
+  :init (global-flycheck-mode))
+
 (use-package lsp-mode
   :ensure t
-  :hook (go-mode . lsp)
+  :config
+  (setq lsp-prefer-flymake nil
+        lsp-log-io t)
+  :hook ((go-mode . lsp)
+         (python-mode . lsp))
   :commands lsp)
 
 
 (use-package lsp-ui
   :ensure t
+  :requires lsp-mode flycheck
+  :config
+  (setq lsp-ui-doc-enable t
+        lsp-ui-doc-use-childframe t
+        lsp-ui-doc-include-signature t
+        lsp-ui-sideline-enable nil
+        lsp-ui-use-webkit t
+        lsp-ui-flycheck-enable t
+        lsp-ui-flycheck-list-position 'right
+        lsp-ui-flycheck-live-reporting t
+        lsp-ui-peek-enable t
+        lsp-ui-peek-list-width 60
+        lsp-ui-peek-peek-height 25)
   :commands lsp-ui-mode)
 
 (use-package company-lsp
@@ -687,6 +708,8 @@ Start `ielm' if it's not already running."
 
 (require 'dap-go)
 
+(use-package pyvenv
+  :ensure t)
 
 (use-package treemacs
   :ensure t
