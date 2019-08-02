@@ -41,6 +41,10 @@
 
 
 ;; Take a look at https://github.com/danielmartin/dotfiles/blob/master/.emacs.d/init.el
+;;                https://ladicle.com/post/config/
+;; for lsp hints i used: https://www.mortens.dev/blog/emacs-and-the-language-server-protocol/
+
+(setq debug-on-error t)
 
 (defvar current-user
   (getenv
@@ -688,16 +692,22 @@ Start `ielm' if it's not already running."
         lsp-ui-peek-enable t
         lsp-ui-peek-list-width 60
         lsp-ui-peek-peek-height 25)
-  (message "require ui peek")
   (require 'lsp-ui-peek)
   (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
   (define-key lsp-ui-mode-map (kbd "s-.") #'lsp-ui-peek-find-references)
-  (message "Keys defined")
+  (require 'lsp-ui-doc)
   :commands lsp-ui-mode)
+
 
 
 (use-package company-lsp
   :ensure t
+  :config
+  (push 'company-lsp company-backends)
+  ;; Disable client-side cache because the LSP server does a better job.
+  (setq company-transformers nil
+        company-lsp-async t
+        company-lsp-cache-candidates nil)
   :commands company-lsp)
 
 (use-package helm-lsp
@@ -709,9 +719,14 @@ Start `ielm' if it's not already running."
   :commands lsp-treemacs-errors-list)
 
 (use-package dap-mode
-  :ensure t)
+  :ensure t
+  :config
+  (require 'dap-go)
+  (use-package dap-ui
+    :ensure nil
+    :config
+    (dap-ui-mode 1)))
 
-(require 'dap-go)
 
 (use-package pyvenv
   :ensure t)
