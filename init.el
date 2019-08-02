@@ -1,6 +1,6 @@
 ;;; init.el --- Prelude's configuration entry point.
 ;;
-;; Copyright (c) 2011-2018 Bozhidar Batsov
+;; Copyright (c) 2019 Michael Lausch
 ;;
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: http://batsov.com/prelude
@@ -676,7 +676,6 @@ Start `ielm' if it's not already running."
 
 (use-package lsp-ui
   :ensure t
-  :requires lsp-mode flycheck
   :config
   (setq lsp-ui-doc-enable t
         lsp-ui-doc-use-childframe t
@@ -689,7 +688,13 @@ Start `ielm' if it's not already running."
         lsp-ui-peek-enable t
         lsp-ui-peek-list-width 60
         lsp-ui-peek-peek-height 25)
+  (message "require ui peek")
+  (require 'lsp-ui-peek)
+  (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
+  (define-key lsp-ui-mode-map (kbd "s-.") #'lsp-ui-peek-find-references)
+  (message "Keys defined")
   :commands lsp-ui-mode)
+
 
 (use-package company-lsp
   :ensure t
