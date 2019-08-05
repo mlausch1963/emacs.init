@@ -727,9 +727,19 @@ Start `ielm' if it's not already running."
     :config
     (dap-ui-mode 1)))
 
+(use-package gud
+  :ensure t)
+
+(use-package go-dlv
+  :ensure t)
 
 (use-package pyvenv
   :ensure t)
+
+(use-package beacon
+  :ensure t
+  :config
+  (beacon-mode 1))
 
 (use-package treemacs
   :ensure t
