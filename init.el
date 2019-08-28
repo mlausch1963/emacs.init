@@ -44,18 +44,31 @@
 ;;                https://ladicle.com/post/config/
 ;; for lsp hints i used: https://www.mortens.dev/blog/emacs-and-the-language-server-protocol/
 
-(setq debug-on-error t)
+(when (version< emacs-version "25.1")
+  (error "Mla requires GNU Emacs 25.1 or newer, but you're running %s" emacs-version))
 
 (defvar current-user
   (getenv
    (if (equal system-type 'windows-nt) "USERNAME" "USER")))
-
-(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
-
 (message "Mla is powering up... Be patient, Master %s!" current-user)
 
-(when (version< emacs-version "25.1")
-  (error "Mla requires GNU Emacs 25.1 or newer, but you're running %s" emacs-version))
+
+(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.2")
+
+(defmacro with-system (type &rest body)
+  "Evaluate BODY if `system-type' equals TYPE."
+  (declare (indent defun))
+  `(when (eq system-type ',type)
+     ,@body))
+
+(with-system darwin
+             (setenv "PATH" (concat "/usr/local/bin"
+                                    ":"
+                                    (getenv "GOPATH") "/bin"
+                                    ":"
+                                    (getenv "PATH")))
+             (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.2"))
+
 
 ;; Always load newest byte code
 (setq load-prefer-newer t)
@@ -452,7 +465,6 @@ Start `ielm' if it's not already running."
       helm-split-window-default-side        'other)
   (global-unset-key (kbd "C-x c"))
   (helm-mode 1)
-  (helm-projectile-on)
   :hook (eshell-mode . (lambda ()
                          (substitute-key-definition 'eshell-list-history 'helm-eshell-history eshell-mode-map)))
   :bind-keymap
@@ -529,7 +541,9 @@ Start `ielm' if it's not already running."
   )
 
 (use-package helm-projectile
-  :ensure t)
+  :ensure t
+  :config
+  (helm-projectile-on))
 
 (use-package exec-path-from-shell
   :ensure t
