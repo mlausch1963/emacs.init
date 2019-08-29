@@ -680,6 +680,7 @@ Start `ielm' if it's not already running."
 
 (use-package lsp-ui
   :ensure t
+  :after flycheck
   :config
   (setq lsp-ui-doc-enable t
         lsp-ui-doc-use-childframe t
