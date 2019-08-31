@@ -53,7 +53,7 @@
 (message "Mla is powering up... Be patient, Master %s!" current-user)
 
 
-(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.2")
+(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
 
 (defmacro with-system (type &rest body)
   "Evaluate BODY if `system-type' equals TYPE."
@@ -838,8 +838,29 @@ Start `ielm' if it's not already running."
   :after treemacs magit
   :ensure t)
 
+(defun mla/download-bookmark+ ()
+  (interactive)
+  (let ((gnutls
+         -algorithm-priority "NORMAL:-VERS-TLS1.3")
+        (bookmarkplus-dir "~/.emacs.d/vendor/bookmark-plus/")
+        (emacswiki-base "https://www.emacswiki.org/emacs/download/")
+        (bookmark-files '("bookmark+.el" "bookmark+-mac.el" "bookmark+-bmu.el" "bookmark+-key.el" "bookmark+-lit.el" "bookmark+-1.el")))
+    (require 'url)
+    (add-to-list 'load-path bookmarkplus-dir)
+    (make-directory bookmarkplus-dir t)
+    (mapcar (lambda (arg)
+              (let ((local-file (concat bookmarkplus-dir arg)))
+                (unless (file-exists-p local-file)
+                  (url-copy-file (concat emacswiki-base arg) local-file t))))
+          bookmark-files)
+    (byte-recompile-directory bookmarkplus-dir 0)))
 
 
+(use-package bookmark+
+  :config
+  (setq bookmark-version-control t)
+  (setq delete-old-versions t)
+  :load-path "vendor/bookark-plus")
 
 ;;; init.el ends here
 (put 'erase-buffer 'disabled nil)
