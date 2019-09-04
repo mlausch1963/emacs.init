@@ -537,6 +537,8 @@ Start `ielm' if it's not already running."
   :config
   (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (projectile-mode +1)
+  (setq projectile-cache-file (expand-file-name
+                               "bookmarks"  mla-savefile-dir))
   :delight '(:eval (concat " " (projectile-project-name)))
   )
 
