@@ -675,7 +675,11 @@ Start `ielm' if it's not already running."
   :hook (go-mode . ws-no-tabs-highlight)
   :ensure t)
 
+(use-package go-stacktracer
+  :ensure t)
 
+(use-package golint
+  :ensure t)
 ;  (local-set-key (kbd "M-.") #'rtags-find-symbol-at-point)
 ;  (local-set-key (kbd "s-.") #'rtags-find-references-at-point)
  ; (local-set-key (kbd "M-,") #'rtags-location-stack-back)
@@ -863,6 +867,9 @@ Start `ielm' if it's not already running."
   (setq bookmark-version-control t)
   (setq delete-old-versions t)
   :load-path "vendor/bookark-plus")
+
+(use-package ein
+  :ensure t)
 
 ;;; init.el ends here
 (put 'erase-buffer 'disabled nil)
