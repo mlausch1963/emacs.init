@@ -845,9 +845,9 @@ Start `ielm' if it's not already running."
   :ensure t)
 
 (defun mla/download-bookmark+ ()
+  "Download the bookmark+ source from the Emacs wiki."
   (interactive)
-  (let ((gnutls
-         -algorithm-priority "NORMAL:-VERS-TLS1.3")
+  (let ((gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
         (bookmarkplus-dir "~/.emacs.d/vendor/bookmark-plus/")
         (emacswiki-base "https://www.emacswiki.org/emacs/download/")
         (bookmark-files '("bookmark+.el" "bookmark+-mac.el" "bookmark+-bmu.el" "bookmark+-key.el" "bookmark+-lit.el" "bookmark+-1.el")))
@@ -870,6 +870,10 @@ Start `ielm' if it's not already running."
 
 (use-package ein
   :ensure t)
+
+(use-package json-mode
+  :ensure t
+  :mode (("\\.json\\'" . jason-mode)))
 
 ;;; init.el ends here
 (put 'erase-buffer 'disabled nil)
