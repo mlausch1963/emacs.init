@@ -1,0 +1,15 @@
+/.cache/treemacs-persist
+/.lsp-session-v1
+/bookmarks
+/auto-save-list/.saves-13068-loki.home.lausch.at~
+/auto-save-list/.saves-1966-loki.home.lausch.at~
+*~
+/elpa
+/personal
+/projectile-bookmarks.eld
+/request
+/savefile
+/session.*
+/transient
+**/*.elc
+*.elc
