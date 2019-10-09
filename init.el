@@ -134,6 +134,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 ;; keep the installed packages in .emacs.d
 (setq package-user-dir (expand-file-name "elpa" user-emacs-directory))
 
+
 (package-initialize)
 ;; update the package metadata is the local cache is missing
 
@@ -688,10 +689,72 @@ Start `ielm' if it's not already running."
   :ensure t
   :init (global-flycheck-mode))
 
+
+(defun mla/get-pylint-venv-path ()
+  "Calculate the pylint exec path from active venv"
+  (when pyvenv-activate
+    (setq flycheck-python-pylint-executable
+          (concat (file-name-as-directory
+                   (concat (file-name-as-directory pyvenv-activate) "bin"))
+            "pylint"))))
+
+
+(defun mla/set-pylint-from-venv ()
+  "Set the pylint executable depending on the virtualenv setting."
+  (setq flycheck-python-pylint-executable (mla/get-pylint-venv-path)))
+
+(add-hook 'flycheck-before-syntax-check-hook
+          #'mla/set-pylint-from-venv 'local)
+
+;:plugins.jedi_completion.enabled t
+;; :plugins.jedi_definition.follow_imports t
+;; :configurationSources ["pycodestyle"]
+;; :plugins.jedi_completion.enabled t
+;; :plugins.jedi_definition.enabled t
+;; :plugins.jedi_definition.follow_imports nil
+;; :plugins.jedi_definition.follow_builtin_imports nil
+;; :plugins.jedi_hover.enabled t
+;; :plugins.jedi_references.enabled t
+;; :plugins.jedi_signature_help.enabled nil
+;; :plugins.jedi_symbols.enabled nil
+;; :plugins.jedi_symbols.all_scopes t
+;; :plugins.mccabe.enabled nil
+;; :plugins.mccabe.threshold 15
+;; :plugins.preload.enabled t
+;; :plugins.preload.modules nil
+;; :plugins.pycodestyle.enabled t
+;; :plugins.pycodestyle.exclude nil
+;; :plugins.pycodestyle.filename nil
+;; :plugins.pycodestyle.select nil
+;; :plugins.pycodestyle.ignore nil
+;; :plugins.pycodestyle.hangClosing nil
+;; :plugins.pycodestyle.maxLineLength nil
+;; :plugins.pydocstyle.enabled nil
+;; :plugins.pydocstyle.convention nil
+;; :plugins.pydocstyle.addIgnore nil
+;; :plugins.pydocstyle.addSelect nil
+;; :plugins.pydocstyle.ignore nil
+;; :plugins.pydocstyle.select nil
+;; :plugins.pydocstyle.match "(?!test_).*.py"
+;; :plugins.pydocstyle.matchDir nil
+;; :plugins.pyflakes.enabled t
+;; :plugins.rope_completion.enabled t
+;; :plugins.yapf.enabled t
+;; :rope.extensionModules nil
+;; :rope.ropeFolder nil
+
+(defun mla/set-pyls-config ()
+     (let ((lsp-cfg `(:pyls (:plugins.pylint nil))))
+       (lsp--set-configuration lsp-cfg)))
+
+
 (use-package lsp-mode
   :ensure t
   :config
   (setq lsp-prefer-flymake nil
+;        lsp-pyls-plugins-pylint-enabled nil
+        lsp-pyls-plugins-pycodestyle-enabled t
+        lsp-pyls-plugins.pycodestle-max-line-length 85
         lsp-log-io t)
   :hook ((go-mode . lsp)
          (python-mode . lsp))
@@ -702,15 +765,10 @@ Start `ielm' if it's not already running."
   :ensure t
   :after flycheck
   :config
-  (setq lsp-ui-doc-enable t
-        lsp-ui-doc-use-childframe t
-        lsp-ui-doc-include-signature t
-        lsp-ui-sideline-enable nil
-        lsp-ui-use-webkit t
+  (setq lsp-ui-doc-use-webkit nil
         lsp-ui-flycheck-enable t
-        lsp-ui-flycheck-list-position 'right
+        lsp-ui-flycheck-list-position 'bottom
         lsp-ui-flycheck-live-reporting t
-        lsp-ui-peek-enable t
         lsp-ui-peek-list-width 60
         lsp-ui-peek-peek-height 25)
   (require 'lsp-ui-peek)
@@ -874,6 +932,7 @@ Start `ielm' if it's not already running."
 (use-package json-mode
   :ensure t
   :mode (("\\.json\\'" . jason-mode)))
+
 
 ;;; init.el ends here
 (put 'erase-buffer 'disabled nil)
