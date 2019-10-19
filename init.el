@@ -448,7 +448,12 @@ Start `ielm' if it's not already running."
 
 (use-package magit
   :ensure t
-  :bind (("s-g" . magit-status)))
+  :bind (("s-g" . magit-status))
+  :commands magit-status)
+
+(use-package salt-mode
+  :ensure t
+  :mode (("\\.sls\\'" . salt-mode)))
 
 (use-package helm
   :ensure t
