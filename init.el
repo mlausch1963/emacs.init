@@ -144,7 +144,13 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 
-(require 'use-package)
+(require 'bind-key)
+
+; This is only needed once, near the top of the file
+(eval-when-compile
+  ;; Following line is not needed if use-package.el is in ~/.emacs.d
+  (require 'use-package))
+
 (setq use-package-verbose t)
 
 (when (fboundp 'tool-bar-mode)
