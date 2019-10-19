@@ -659,7 +659,7 @@ Start `ielm' if it's not already running."
 (add-hook 'c-mode-common-hook #'ws-no-tabs-highlight)
 (add-hook 'c-mode-common-hook #'mla-c-mode-keys)
 (add-hook 'c-mode-common-hook #'mla-c-mode-minor-modes)
-
+(add-hook 'makefile-mode-hook #'ws-no-tabs-highlight)
 
 (use-package rtags
   :ensure t
@@ -681,9 +681,11 @@ Start `ielm' if it's not already running."
 
 (use-package golint
   :ensure t)
-;  (local-set-key (kbd "M-.") #'rtags-find-symbol-at-point)
-;  (local-set-key (kbd "s-.") #'rtags-find-references-at-point)
- ; (local-set-key (kbd "M-,") #'rtags-location-stack-back)
+
+(use-package flycheck-golangci-lint
+  :after flycheck
+  :hook (go-mode . flycheck-golangci-lint-setup)
+  :ensure t)
 
 (use-package flycheck
   :ensure t
