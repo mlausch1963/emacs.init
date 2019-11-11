@@ -234,6 +234,8 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 
 (recentf-mode 1)
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+(add-hook 'rst-mode-hook 'display-line-numbers-mode)
+(add-hook 'salt-mode-hook 'display-line-numbers-mode)
 (add-hook 'prog-mode-hook 'hl-line-mode)
 
 
@@ -475,6 +477,7 @@ Start `ielm' if it's not already running."
       helm-ff-search-library-in-sexp        t
       helm-ff-file-name-history-use-recentf t
       helm-split-window-default-side        'other)
+
   (global-unset-key (kbd "C-x c"))
   (helm-mode 1)
   :hook (eshell-mode . (lambda ()
@@ -492,26 +495,27 @@ Start `ielm' if it's not already running."
    ("C-h f" . helm-apropos)
    ("C-h r" . helm-info-emacs)
    ("C-c C-l" . helm-locate-library))
-  :bind (:map isearch-mode-map
-              ("C-o" . 'helm-occur-from-isearch))
-  :bind (:map shell-mode-map
-              ("C-c C-l" . helm-comint-input-ring))
-  :bind (:map minibuffer-local-map
-              ("C-c C-l" . helm-minibuffer-history))
-  :bind (:map helm-command-map
-              ("o" . helm-occur)
-              ("g" . helm-do-grep)
-              ("C-c w" . helm-wikipedia-suggest)
-              ("SPC" . 'helm-all-mark-rings))
-  :bind (:map helm-map
-              ("<tab>" . helm-execute-persistent-action)
-              ("C-z" . helm-select-action)
-              ("M-i" . helm-previous-line)
-              ("M-k" . helm-next-line)
-              ("M-I" . helm-previous-page)
-              ("M-K" . helm-next-page)
-              ("M-h" . helm-beginning-of-buffer)
-              ("M-H" . helm-end-of-buffer)))
+;  :bind (:map isearch-mode-map
+;              ("C-o" . 'helm-occur-from-isearch))
+;  :bind (:map shell-mode-map
+;              ("C-c C-l" . helm-comint-input-ring))
+;  :bind (:map minibuffer-local-map
+;              ("C-c C-l" . helm-minibuffer-history))
+;  :bind (:map helm-command-map
+;              ("o" . helm-occur)
+;              ("g" . helm-do-grep)
+;              ("C-c w" . helm-wikipedia-suggest)
+;              ("SPC" . 'helm-all-mark-rings))
+;  :bind (:map helm-map
+;              ("<tab>" . helm-execute-persistent-action)
+;              ("C-z" . helm-select-action)
+;              ("M-i" . helm-previous-line)
+;              ("M-k" . helm-next-line)
+;              ("M-I" . helm-previous-page)
+ ;             ("M-K" . helm-next-page)
+ ;             ("M-h" . helm-beginning-of-buffer)
+ ;             ("M-H" . helm-end-of-buffer)))
+  )
 
 (use-package helm-swoop
   :ensure t
@@ -702,6 +706,12 @@ Start `ielm' if it's not already running."
   :ensure t
   :init (global-flycheck-mode))
 
+
+(use-package flyspell-correct-helm
+  :ensure t
+  :demand t
+  :bind ("C-M-;" . flyspell-correct-wrapper)
+  :init (setq flyspell-correct-interface #'flyspell-correct-helm))
 
 (defun mla/get-pylint-venv-path ()
   "Calculate the pylint exec path from active venv"
