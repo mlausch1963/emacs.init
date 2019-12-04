@@ -324,87 +324,12 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   ;; enable some really cool extensions like C-x C-j(dired-jump)
   (require 'dired-x))
 
-
-;;; built-in packages
-(use-package paren
-  :config
-  (show-paren-mode +1))
-
-(use-package elec-pair
-  :config
-  (electric-pair-mode +1))
-
-;; highlight the current line
-(use-package hl-line
-  :config
-  (global-hl-line-mode +1))
-
-
-(use-package uniquify
-  :config
-  (setq uniquify-buffer-name-style 'forward)
-  (setq uniquify-separator "/")
-  ;; rename after killing uniquified
-  (setq uniquify-after-kill-buffer-p t)
-  ;; don't muck with special buffers
-  (setq uniquify-ignore-buffers-re "^\\*"))
-
-;; saveplace remembers your location in a file when saving files
-(use-package saveplace
-  :config
-  (setq save-place-file (expand-file-name "saveplace" mla-savefile-dir))
-  ;; activate it for all buffers
-  (setq-default save-place t))
-
-(use-package savehist
-  :config
-  (setq savehist-additional-variables
-        ;; search entries
-        '(search-ring regexp-search-ring)
-        ;; save every minute
-        savehist-autosave-interval 60
-        ;; keep the home clean
-        savehist-file (expand-file-name "savehist" mla-savefile-dir))
-  (savehist-mode +1))
-
-(use-package recentf
-  :config
-  (setq recentf-save-file (expand-file-name "recentf" mla-savefile-dir)
-        recentf-max-saved-items 500
-        recentf-max-menu-items 15
-        ;; disable recentf-cleanup on Emacs start, because it can cause
-        ;; problems with remote files
-        recentf-auto-cleanup 'never)
-  (recentf-mode +1))
-
-(use-package windmove
-  :config
-  ;; use shift + arrow keys to switch between visible buffers
-  (windmove-default-keybindings))
-
 (use-package edit-server
   :ensure t
   :if window-system
   :init
   (add-hook 'after-init-hook 'server-start t)
   (add-hook 'after-init-hook 'edit-server-start t))
-
-(use-package dired
-  :config
-  ;; dired - reuse current buffer by pressing 'a'
-  (put 'dired-find-alternate-file 'disabled nil)
-
-  ;; always delete and copy recursively
-  (setq dired-recursive-deletes 'always)
-  (setq dired-recursive-copies 'always)
-
-  ;; if there is a dired buffer displayed in the next window, use its
-  ;; current subdir, instead of the current subdir of this dired buffer
-  (setq dired-dwim-target t)
-
-  ;; enable some really cool extensions like C-x C-j(dired-jump)
-  (require 'dired-x))
-
 
 (use-package which-key
   :ensure t
@@ -480,48 +405,39 @@ Start `ielm' if it's not already running."
 
   (global-unset-key (kbd "C-x c"))
   (helm-mode 1)
-  :hook (eshell-mode . (lambda ()
-                         (substitute-key-definition 'eshell-list-history 'helm-eshell-history eshell-mode-map)))
+  :hook
+  (eshell-mode . (lambda ()
+                   (substitute-key-definition 'eshell-list-history 'helm-eshell-history eshell-mode-map)))
   :bind-keymap
   ("C-c h" . helm-command-prefix)
-  :bind
-  (("M-x" . helm-M-x)
-   ("M-y" . helm-show-kill-ring)
-   ("C-x C-f" . helm-find-files)
-   ("C-x f" . helm-recentf)
-   ("C-c o" . helm-occur)
-   ("C-x b" . helm-mini)
-   ("C-x C-b" . helm-buffers-list)
-   ("C-h f" . helm-apropos)
-   ("C-h r" . helm-info-emacs)
-   ("C-c C-l" . helm-locate-library))
-;  :bind (:map isearch-mode-map
-;              ("C-o" . 'helm-occur-from-isearch))
-;  :bind (:map shell-mode-map
-;              ("C-c C-l" . helm-comint-input-ring))
-;  :bind (:map minibuffer-local-map
-;              ("C-c C-l" . helm-minibuffer-history))
-;  :bind (:map helm-command-map
-;              ("o" . helm-occur)
-;              ("g" . helm-do-grep)
-;              ("C-c w" . helm-wikipedia-suggest)
-;              ("SPC" . 'helm-all-mark-rings))
-;  :bind (:map helm-map
-;              ("<tab>" . helm-execute-persistent-action)
-;              ("C-z" . helm-select-action)
-;              ("M-i" . helm-previous-line)
-;              ("M-k" . helm-next-line)
-;              ("M-I" . helm-previous-page)
- ;             ("M-K" . helm-next-page)
- ;             ("M-h" . helm-beginning-of-buffer)
- ;             ("M-H" . helm-end-of-buffer)))
-  )
+  :bind (
+         (("M-x" . helm-M-x)
+          ("M-y" . helm-show-kill-ring)
+          ("C-x C-f" . helm-find-files)
+          ("C-x f" . helm-recentf)
+          ("C-c o" . helm-occur)
+          ("C-x b" . helm-mini)
+          ("C-x C-b" . helm-buffers-list)
+          ("C-h f" . helm-apropos)
+          ("C-h r" . helm-info-emacs)
+          ("C-c C-l" . helm-locate-library))
+         :map minibuffer-local-map
+         ("C-c  C-l" . 'helm-minibuffer-history)
+         :map isearch-mode-map
+         ("C-o" . 'helm-occur-from-isearch)
+         :map shell-mode-map
+         ("C-c C-l" . 'helm-comint-input-ring)
+         :map helm-map
+         ("<tab>" . 'helm-execute-persistent-action)
+         :map helm-map
+         ("C-i" . 'helm-execute-persistent-action)
+         ("C-z" . helm-select-action)))
 
 (use-package helm-swoop
   :ensure t
   :bind
-  (("C-s" . helm-swoop-without-pre-input)
-   ("C-s-s" . helm-swoop)))
+  (("C-S-s" . helm-swoop-without-pre-input)
+   ("S-s" . helm-swoop)))
 
 (use-package helm-descbinds
   :ensure t
@@ -713,21 +629,26 @@ Start `ielm' if it's not already running."
   :bind ("C-M-;" . flyspell-correct-wrapper)
   :init (setq flyspell-correct-interface #'flyspell-correct-helm))
 
-(defun mla/get-pylint-venv-path ()
-  "Calculate the pylint exec path from active venv"
-  (when pyvenv-activate
-    (setq flycheck-python-pylint-executable
-          (concat (file-name-as-directory
-                   (concat (file-name-as-directory pyvenv-activate) "bin"))
-            "pylint"))))
+(use-package pyvenv
+  :init
+  (add-hook 'python-mode-hook #'pyvenv-tracking-mode)
+  (add-hook 'python-mode-hook #'pyvenv-mode)
+  )
+                                        ;(defun mla/get-pylint-venv-path ()
+;  "Calculate the pylint exec path from active venv"
+;  (when pyvenv-activate
+;    (setq flycheck-python-pylint-executable
+;          (concat (file-name-as-directory
+;                   (concat (file-name-as-directory pyvenv-activate) "bin"))
+;            "pylint"))))
 
 
-(defun mla/set-pylint-from-venv ()
-  "Set the pylint executable depending on the virtualenv setting."
-  (setq flycheck-python-pylint-executable (mla/get-pylint-venv-path)))
+;(defun mla/set-pylint-from-venv ()
+;  "Set the pylint executable depending on the virtualenv setting."
+;  (setq flycheck-python-pylint-executable (mla/get-pylint-venv-path)))
 
-(add-hook 'flycheck-before-syntax-check-hook
-          #'mla/set-pylint-from-venv 'local)
+;(add-hook 'flycheck-before-syntax-check-hook
+;          #'mla/set-pylint-from-venv 'local)
 
 ;:plugins.jedi_completion.enabled t
 ;; :plugins.jedi_definition.follow_imports t
@@ -766,21 +687,22 @@ Start `ielm' if it's not already running."
 ;; :rope.extensionModules nil
 ;; :rope.ropeFolder nil
 
-(defun mla/set-pyls-config ()
-     (let ((lsp-cfg `(:pyls (:plugins.pylint nil))))
-       (lsp--set-configuration lsp-cfg)))
+;(defun mla/set-pyls-config ()
+;     (let ((lsp-cfg `(:pyls (:plugins.pylint nil))))
+;       (lsp--set-configuration lsp-cfg)))
 
 
 (use-package lsp-mode
   :ensure t
   :config
   (setq lsp-prefer-flymake nil
-;        lsp-pyls-plugins-pylint-enabled nil
-        lsp-pyls-plugins-pycodestyle-enabled t
-        lsp-pyls-plugins.pycodestle-max-line-length 85
+;        lsp-pyls-plugins-pylint-enabled t
+;        lsp-pyls-plugins-pycodestyle-enabled t
+;        lsp-pyls-plugins.pycodestle-max-line-length 85
         lsp-log-io t)
-  :hook ((go-mode . lsp)
-         (python-mode . lsp))
+  :init
+  (add-hook 'go-mode-hook #'lsp t)
+  (add-hook 'python-mode-hook #'lsp t)
   :commands lsp)
 
 
@@ -789,9 +711,9 @@ Start `ielm' if it's not already running."
   :after flycheck
   :config
   (setq lsp-ui-doc-use-webkit nil
-        lsp-ui-flycheck-enable t
-        lsp-ui-flycheck-list-position 'bottom
-        lsp-ui-flycheck-live-reporting t
+;        lsp-ui-flycheck-enable t
+;        lsp-ui-flycheck-list-position 'bottom
+;        lsp-ui-flycheck-live-reporting t
         lsp-ui-peek-list-width 60
         lsp-ui-peek-peek-height 25)
   (require 'lsp-ui-peek)
@@ -833,9 +755,6 @@ Start `ielm' if it's not already running."
   :ensure t)
 
 (use-package go-dlv
-  :ensure t)
-
-(use-package pyvenv
   :ensure t)
 
 (use-package beacon
@@ -908,7 +827,7 @@ Start `ielm' if it's not already running."
         ("C-x t M-t" . treemacs-find-tag)))
 
 (use-package treemacs-evil
-  :disabled
+1  :disabled
   :after treemacs evil
   :ensure t)
 
@@ -955,6 +874,22 @@ Start `ielm' if it's not already running."
 (use-package json-mode
   :ensure t
   :mode (("\\.json\\'" . jason-mode)))
+
+
+(use-package slime
+  :config
+  (progn
+    (load (expand-file-name "~/quicklisp/slime-helper.el")
+          (setq inferior-lisp-program "/usr/bin/sbcl")))
+  :ensure t
+  :mode (("\\.lsp\\'" . slime-mode)
+         ("\\.lisp\\'" . slime-mode)))
+
+(use-package slime-company
+  :ensure t)
+
+(use-package slime-docker
+  :ensure t)
 
 
 ;;; init.el ends here
