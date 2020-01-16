@@ -896,7 +896,7 @@ Start `ielm' if it's not already running."
 
 (use-package json-mode
   :ensure t
-  :mode (("\\.json\\'" . jason-mode)))
+  :mode (("\\.json\\'" . json-mode)))
 
 
 (use-package slime
