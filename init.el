@@ -327,7 +327,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 (use-package edit-server
   :ensure t
   :if window-system
-  :init
+  :config
   (add-hook 'after-init-hook 'server-start t)
   (add-hook 'after-init-hook 'edit-server-start t))
 
@@ -371,8 +371,7 @@ Start `ielm' if it's not already running."
 (use-package solarized-theme
   :ensure t
   :config
-  (load-theme 'solarized-dark t)
-  )
+  (load-theme 'solarized-dark t))
 
 (use-package smart-mode-line
   :ensure t
@@ -395,7 +394,7 @@ Start `ielm' if it's not already running."
   (require 'shell)
   :config
   (require 'helm-config)
-  (setq projectile-completion-system 'helm)
+  (setq projectile-completion-system       'helm)
   (setq helm-split-window-in-side-p         t
       helm-buffers-fuzzy-matching           t
       helm-move-to-line-cycle-in-source     t
@@ -497,10 +496,10 @@ Start `ielm' if it's not already running."
 (use-package whitespace
   :delight whitespace-mode
   :init
+  :config
   (dolist (hook '(prog-mode-hook text-mode-hook))
     (add-hook hook #'whitespace-mode))
   (add-hook 'before-save-hook #'whitespace-cleanup)
-  :config
   (setq whitespace-line-column 80) ;; limit line length
   (setq whitespace-style '(face tabs empty trailing lines-tail)))
 
@@ -530,6 +529,7 @@ Start `ielm' if it's not already running."
 (use-package company
   :diminish company-mode
   :ensure t
+  :bind ("M-/" . company-complete-common)
   :config
   (setq company-idle-delay 0.5)
   (setq company-show-numbers t)
@@ -629,12 +629,17 @@ Start `ielm' if it's not already running."
   :bind ("C-M-;" . flyspell-correct-wrapper)
   :init (setq flyspell-correct-interface #'flyspell-correct-helm))
 
+;(use-package python-mode
+;  :ensure t
+;  :mode (("\\.py\\'" . python-mode)))
+
 (use-package pyvenv
-  :init
-  (add-hook 'python-mode-hook #'pyvenv-tracking-mode)
-  (add-hook 'python-mode-hook #'pyvenv-mode)
-  )
-                                        ;(defun mla/get-pylint-venv-path ()
+  :config
+  (add-hook 'pyython-mode-hook  #'pyvenv-tracking-mode)
+  (add-hook 'python-mode-hook #'pyvenv-mode))
+
+
+;;;(defun mla/get-pylint-venv-path ()
 ;  "Calculate the pylint exec path from active venv"
 ;  (when pyvenv-activate
 ;    (setq flycheck-python-pylint-executable
@@ -694,17 +699,35 @@ Start `ielm' if it's not already running."
 
 (use-package lsp-mode
   :ensure t
+  :after (pyvenv)
   :config
   (setq lsp-prefer-flymake nil
+        lsp-pyls-plugins-flake8-enabled t
 ;        lsp-pyls-plugins-pylint-enabled t
 ;        lsp-pyls-plugins-pycodestyle-enabled t
 ;        lsp-pyls-plugins.pycodestle-max-line-length 85
         lsp-log-io t)
   :init
-  (add-hook 'go-mode-hook #'lsp t)
-  (add-hook 'python-mode-hook #'lsp t)
+  (add-hook 'go-mode-hook #'lsp)
+  (add-hook 'python-mode-hook #'lsp-deferred t)
   :commands lsp)
 
+(defun mla/on-venv-change-restart-pyls ()
+  (let ((venv (lsp-session-get-metadata :venv)))
+    (message "pyvenv post hook: lsp env %s, my env %s" venv (getenv "VIRTUAL_ENV"))
+    (if (not (eq (getenv "VIRTUAL_ENV") venv))
+        (--when-let (pcase (lsp-workspaces)
+                      (`nil (user-error "There are no active servers in the current buffer"))
+                      (`(,workspace) workspace)
+                      (workspaces (lsp--completing-read "VENV Changefd, restaret server: "
+                                                        workspaces
+                                                        'lsp--workspace-print nil t)))
+          (message "pyvenv post hook: restarting pylsp")
+          (lsp-workspace-restart it)))))
+
+;(trace-function 'mla/on-venv-change-restart-pyls)
+
+;(add-hook 'pyvenv-post-activate-hooks #'mla/on-venv-change-restart-pyls)
 
 (use-package lsp-ui
   :ensure t
