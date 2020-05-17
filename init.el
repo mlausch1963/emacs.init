@@ -246,6 +246,22 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 (use-package delight
   :ensure t)
 
+(use-package company
+  :diminish company-mode
+  :ensure t
+  :bind ("M-/" . company-complete-common)
+  :config
+  (setq company-idle-delay 0.5)
+  (setq company-show-numbers t)
+  (setq company-tooltip-limit 10)
+  (setq company-minimum-prefix-length 2)
+  (setq company-tooltip-align-annotations t)
+  ;; invert the navigation direction if the the completion popup-isearch-match
+  ;; is displayed on top (happens near the bottom of windows)
+  (setq company-tooltip-flip-when-above t)
+  (global-company-mode))
+
+
 ;;; built-in packages
 (use-package paren
   :config
@@ -385,6 +401,9 @@ Start `ielm' if it's not already running."
 
 (use-package salt-mode
   :ensure t
+  :config (add-hook 'salt-mode-hook
+                    (lambda ()
+                      (flyspell-mode 1)))
   :mode (("\\.sls\\'" . salt-mode)))
 
 (use-package helm
@@ -526,20 +545,6 @@ Start `ielm' if it's not already running."
 (use-package yaml-mode
   :ensure t)
 
-(use-package company
-  :diminish company-mode
-  :ensure t
-  :bind ("M-/" . company-complete-common)
-  :config
-  (setq company-idle-delay 0.5)
-  (setq company-show-numbers t)
-  (setq company-tooltip-limit 10)
-  (setq company-minimum-prefix-length 2)
-  (setq company-tooltip-align-annotations t)
-  ;; invert the navigation direction if the the completion popup-isearch-match
-  ;; is displayed on top (happens near the bottom of windows)
-  (setq company-tooltip-flip-when-above t)
-  (global-company-mode))
 
 
 (if (executable-find "rg")
@@ -577,9 +582,6 @@ Start `ielm' if it's not already running."
 
 
 (defun mla-c-mode-keys ()
-  (local-set-key (kbd "M-.") #'rtags-find-symbol-at-point)
-  (local-set-key (kbd "s-.") #'rtags-find-references-at-point)
-  (local-set-key (kbd "M-,") #'rtags-location-stack-back)
   (local-set-key "\C-i" #'company-indent-or-complete-common)
   (local-set-key (kbd "<tab>") #'company-indent-or-complete-common)
   )
@@ -594,14 +596,36 @@ Start `ielm' if it's not already running."
 
 (use-package rtags
   :ensure t
-  :defer
+  :init
+  (add-hook 'c-mode-common-hook  #'rtags-start-process-unless-running)
+  :demand
+  :bind
+  (:map c-mode-map
+        ("M-." . rtags-find-symbol-at-point)
+        ("S-." . rtags-find-references-at-point)
+        ("M-," . rtags-location-stack-back))
+
   :config
-  (rtags-enable-standard-keybindings nil "C-c R"))
+  (progn
+    (rtags-enable-standard-keybindings nil "C-c R")
+    (setq rtags-autostart-diagnostics t)
+    (rtags-diagnostics)
+    (setq rtags-completions-enabled t)))
+
 
 (use-package company-rtags
-  :ensure t
-  :defer)
+  :config
+  (push 'company-rtags company-backends))
 
+(use-package helm-rtags
+  :ensure t
+  :init
+  (setq rtags-use-helm t)
+
+  :config
+  (setq rtags-display-result-backend 'helm))
+
+(use-package flycheck-rtags)
 
 (use-package go-mode
   :hook (go-mode . ws-no-tabs-highlight)
@@ -850,7 +874,7 @@ Start `ielm' if it's not already running."
         ("C-x t M-t" . treemacs-find-tag)))
 
 (use-package treemacs-evil
-1  :disabled
+  :disabled
   :after treemacs evil
   :ensure t)
 
