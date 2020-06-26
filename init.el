@@ -399,6 +399,12 @@ Start `ielm' if it's not already running."
   :bind (("s-g" . magit-status))
   :commands magit-status)
 
+(use-package forge
+  :ensure t
+  :after magit
+  :config
+  (add-to-list 'forge-alist '("gitlab.advertima.com:2222" "gitlab.advertima.com/api/v4" "gitlab.advertima.com" forge-gitlab-repository)))
+
 (use-package salt-mode
   :ensure t
   :config (add-hook 'salt-mode-hook
