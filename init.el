@@ -122,7 +122,8 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 
 ;; reduce the frequency of garbage collection by making it happen on
 ;; each 50MB of allocated data (the default is on every 0.76MB)
-(setq gc-cons-threshold 50000000)
+(setq gc-cons-threshold 100000000)
+(setq read-process-output-max (* 1024 1024)) ;; 1mb
 
 ;; warn when opening files bigger than 100MB
 (setq large-file-warning-threshold 100000000)
@@ -727,6 +728,7 @@ Start `ielm' if it's not already running."
 ;       (lsp--set-configuration lsp-cfg)))
 
 
+
 (use-package lsp-mode
   :ensure t
   :after (pyvenv)
@@ -737,10 +739,12 @@ Start `ielm' if it's not already running."
 ;        lsp-pyls-plugins-pycodestyle-enabled t
 ;        lsp-pyls-plugins.pycodestle-max-line-length 85
         lsp-log-io t)
-  :init
-  (add-hook 'go-mode-hook #'lsp)
-  (add-hook 'python-mode-hook #'lsp-deferred t)
+  :hook (
+         (go-mode . lsp)
+         (python-mode . lsp-deferred))
   :commands lsp)
+
+(setq lsp-completion-provider :capf)
 
 (defun mla/on-venv-change-restart-pyls ()
   (let ((venv (lsp-session-get-metadata :venv)))
@@ -777,15 +781,17 @@ Start `ielm' if it's not already running."
 
 
 
-(use-package company-lsp
-  :ensure t
-  :config
-  (push 'company-lsp company-backends)
-  ;; Disable client-side cache because the LSP server does a better job.
-  (setq company-transformers nil
-        company-lsp-async t
-        company-lsp-cache-candidates nil)
-  :commands company-lsp)
+;; (use-package company-lsp
+;;   :ensure t
+;;   :config
+;;   (push 'company-lsp company-backends)
+;;   ;; Disable client-side cache because the LSP server does a better job.
+;;   (setq company-transformers nil
+;;         company-lsp-async t
+;;         company-lsp-cache-candidates nil)
+;;   :commands company-lsp)
+
+()
 
 (use-package helm-lsp
   :ensure t
