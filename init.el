@@ -669,6 +669,9 @@ Start `ielm' if it's not already running."
   (add-hook 'pyython-mode-hook  #'pyvenv-tracking-mode)
   (add-hook 'python-mode-hook #'pyvenv-mode))
 
+(use-package typescript-mode
+  :ensure t
+  )
 
 ;;;(defun mla/get-pylint-venv-path ()
 ;  "Calculate the pylint exec path from active venv"
@@ -741,7 +744,9 @@ Start `ielm' if it's not already running."
         lsp-log-io t)
   :hook (
          (go-mode . lsp)
+         (typescript-mode . lsp)
          (python-mode . lsp-deferred))
+
   :commands lsp)
 
 (setq lsp-completion-provider :capf)
