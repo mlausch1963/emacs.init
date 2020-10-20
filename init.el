@@ -549,10 +549,17 @@ Start `ielm' if it's not already running."
            (selected-file (completing-read "Select article: " files nil t)))
       (insert (format "{%% post_url %s %%}" selected-file)))))
 
-(use-package yaml-mode
+(use-package highlight-indentation
   :ensure t)
 
-
+(use-package yaml-mode
+  :ensure t
+  :init
+  (add-hook 'yaml-mode-hook 'display-line-numbers-mode)
+  (add-hook 'yaml-mode-hook 'highlight-indentation-mode)
+  :bind
+  (:map yaml-mode-map
+        ("\C-m" . newline-and-indent)))
 
 (if (executable-find "rg")
     (use-package rg
@@ -660,9 +667,10 @@ Start `ielm' if it's not already running."
   :bind ("C-M-;" . flyspell-correct-wrapper)
   :init (setq flyspell-correct-interface #'flyspell-correct-helm))
 
-;(use-package python-mode
-;  :ensure t
-;  :mode (("\\.py\\'" . python-mode)))
+(use-package python
+  :ensure t
+  :interpreter ("python3" . python-mode)
+  :mode (("\\.py\\'" . python-mode)))
 
 (use-package pyvenv
   :config
@@ -671,7 +679,14 @@ Start `ielm' if it's not already running."
 
 (use-package typescript-mode
   :ensure t
+  :mode (("\\.ts\\'" . typescript-mode))
   )
+
+(use-package terraform-mode
+  :ensure t
+  :mode (("\\.tf\\'" . terraform-mode))
+  )
+
 
 ;;;(defun mla/get-pylint-venv-path ()
 ;  "Calculate the pylint exec path from active venv"
@@ -738,15 +753,13 @@ Start `ielm' if it's not already running."
   :config
   (setq lsp-prefer-flymake nil
         lsp-pyls-plugins-flake8-enabled t
-;        lsp-pyls-plugins-pylint-enabled t
-;        lsp-pyls-plugins-pycodestyle-enabled t
-;        lsp-pyls-plugins.pycodestle-max-line-length 85
         lsp-log-io t)
   :hook (
          (go-mode . lsp)
+         (terraform-mode . lsp)
          (typescript-mode . lsp)
-         (python-mode . lsp-deferred))
-
+         (python-mode . lsp-deferred)
+         (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp)
 
 (setq lsp-completion-provider :capf)
