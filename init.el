@@ -798,19 +798,6 @@ Start `ielm' if it's not already running."
   :commands lsp-ui-mode)
 
 
-
-;; (use-package company-lsp
-;;   :ensure t
-;;   :config
-;;   (push 'company-lsp company-backends)
-;;   ;; Disable client-side cache because the LSP server does a better job.
-;;   (setq company-transformers nil
-;;         company-lsp-async t
-;;         company-lsp-cache-candidates nil)
-;;   :commands company-lsp)
-
-()
-
 (use-package helm-lsp
   :ensure t
   :commands helm-lsp-workspace-symbol)
@@ -967,6 +954,13 @@ Start `ielm' if it's not already running."
 
 (use-package slime-docker
   :ensure t)
+
+(use-package goggles
+  :demand t
+  :ensure t
+  :config
+  (goggles-mode)
+  (setq-default goggles-pulse t)) ;; set to nil to disable pulsing
 
 
 ;;; init.el ends here
