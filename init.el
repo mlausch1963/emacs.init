@@ -1025,3 +1025,11 @@ Start `ielm' if it's not already running."
   :ensure t
   :after org-roam
   :config (push 'company-org-roam company-backends))
+
+(use-package spdx
+  :ensure t
+  :bind (:map prog-mode-map
+         ("C-c i l" . spdx-insert-spdx))
+  :custom
+  (spdx-copyright-holder 'auto)
+  (spdx-project-detection 'auto))
