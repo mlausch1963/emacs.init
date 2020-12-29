@@ -146,6 +146,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   (package-install 'use-package))
 
 (require 'bind-key)
+(require 'bind-key)
 
 ; This is only needed once, near the top of the file
 (eval-when-compile
@@ -798,19 +799,6 @@ Start `ielm' if it's not already running."
   :commands lsp-ui-mode)
 
 
-
-;; (use-package company-lsp
-;;   :ensure t
-;;   :config
-;;   (push 'company-lsp company-backends)
-;;   ;; Disable client-side cache because the LSP server does a better job.
-;;   (setq company-transformers nil
-;;         company-lsp-async t
-;;         company-lsp-cache-candidates nil)
-;;   :commands company-lsp)
-
-()
-
 (use-package helm-lsp
   :ensure t
   :commands helm-lsp-workspace-symbol)
@@ -968,6 +956,22 @@ Start `ielm' if it's not already running."
 (use-package slime-docker
   :ensure t)
 
+(use-package goggles
+  :demand t
+  :ensure t
+  :config
+  (goggles-mode)
+  (setq-default goggles-pulse t)) ;; set to nil to disable pulsing
+
+
+(use-package sqlite3
+  :ensure t
+  )
+
+(use-package org-ref
+  :ensure t
+  )
+
 
 (use-package protobuf-mode
   :init
@@ -976,3 +980,63 @@ Start `ielm' if it's not already running."
 
 ;;; init.el ends here
 (put 'erase-buffer 'disabled nil)
+(use-package org-roam
+      :ensure t
+      :hook
+      (after-init . org-roam-mode)
+      :config
+      (define-key global-map (kbd "C-c n r") #'org-roam-buffer-toggle-display)
+      (define-key global-map (kbd "C-c n i") #'org-roam-insert)
+      (define-key global-map (kbd "C-c n /") #'org-roam-find-file)
+      (define-key global-map (kbd "C-c n b") #'org-roam-switch-to-buffer)
+      (define-key global-map (kbd "C-c n d") #'org-roam-find-directory)
+      (require 'org-roam-protocol)
+      (require 'org-protocol)
+      :custom
+      (org-roam-directory "/home/mla/Dropbox-Decrypted/org-roam" "home of org roam")
+      (org-roam-ref-capture-templates
+       '(("d" "default" plain (function org-roam--capture-get-point)
+        "%?"
+        :file-name "${slug}"
+        :head "#+TITLE: ${title}\n"
+        :unarrowed t)))
+      (org-roam-capture-ref-templates
+        '(("r" "ref" plain (function org-roam-capture--get-point)
+               "%?"
+               :file-name "websites/${slug}"
+               :head "#+TITLE: ${title}
+#+ROAM_KEY: ${ref}
+- source :: ${ref}"
+               :unnarrowed t)))
+
+      :bind (:map org-roam-mode-map
+              (("C-c n l" . org-roam)
+               ("C-c n f" . org-roam-find-file)
+               ("C-c n g" . org-roam-graph))
+              :map org-mode-map
+              ("C-c n i" . org-roam-insert)
+              ("C-c n I" . org-roam-insert-immediate)))
+
+
+(use-package org-journal
+      :bind
+      ("C-c n j" . org-journal-new-entry)
+      :custom
+      (org-journal-dir "~/Dropbox-Decrypted/org-roam")
+      (org-journal-date-prefix "#+TITLE: ")
+      (org-journal-file-format "%Y-%m-%d.org")
+      (org-journal-date-format "%A, %d %B %Y"))
+    (setq org-journal-enable-agenda-integration t)
+
+(use-package company-org-roam
+  :ensure t
+  :after org-roam
+  :config (push 'company-org-roam company-backends))
+
+(use-package spdx
+  :ensure t
+  :bind (:map prog-mode-map
+         ("C-c i l" . spdx-insert-spdx))
+  :custom
+  (spdx-copyright-holder 'auto)
+  (spdx-project-detection 'auto))
