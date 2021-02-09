@@ -981,6 +981,13 @@ Start `ielm' if it's not already running."
   )
 
 
+(use-package protobuf-mode
+  :init
+  (add-hook 'yaml-mode-hook 'display-line-numbers-mode)
+  :ensure t)
+
+;;; init.el ends here
+(put 'erase-buffer 'disabled nil)
 (use-package org-roam
       :ensure t
       :hook
