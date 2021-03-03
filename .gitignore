@@ -13,3 +13,6 @@
 /transient
 **/*.elc
 *.elc
+/org-roam.db
+/org-journal.cache
+/forge-database.sqlite

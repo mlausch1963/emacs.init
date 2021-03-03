@@ -1,4 +1,4 @@
-;;; init.el --- Prelude's configuration entry point.
+;; init.el --- Prelude's configuration entry point.
 ;;
 ;; Copyright (c) 2019 Michael Lausch
 ;;
@@ -642,8 +642,15 @@ Start `ielm' if it's not already running."
 
 (use-package flycheck-rtags)
 
+(defun lsp-go-install-save-hooks ()
+  (add-hook 'before-save-hook #'lsp-format-buffer t t)
+  (add-hook 'before-save-hook #'lsp-organize-imports t t))
+
 (use-package go-mode
-  :hook (go-mode . ws-no-tabs-highlight)
+  :hook
+  (go-mode . ws-no-tabs-highlight)
+  (go-mode . lsp-deferred)
+  (go-mode . lsp-go-install-save-hooks)
   :ensure t)
 
 (use-package go-stacktracer
@@ -756,12 +763,13 @@ Start `ielm' if it's not already running."
         lsp-pyls-plugins-flake8-enabled t
         lsp-log-io t)
   :hook (
-         (go-mode . lsp)
          (terraform-mode . lsp)
          (typescript-mode . lsp)
          (python-mode . lsp-deferred)
          (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp)
+
+
 
 (setq lsp-completion-provider :capf)
 
@@ -1032,6 +1040,11 @@ Start `ielm' if it's not already running."
   :ensure t
   :after org-roam
   :config (push 'company-org-roam company-backends))
+
+(use-package editorconfig
+  :ensure t
+  :config
+  (editorconfig-mode 1))
 
 (use-package spdx
   :ensure t
