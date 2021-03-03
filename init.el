@@ -1036,11 +1036,6 @@ Start `ielm' if it's not already running."
       (org-journal-date-format "%A, %d %B %Y"))
     (setq org-journal-enable-agenda-integration t)
 
-(use-package company-org-roam
-  :ensure t
-  :after org-roam
-  :config (push 'company-org-roam company-backends))
-
 (use-package editorconfig
   :ensure t
   :config
