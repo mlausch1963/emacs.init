@@ -998,10 +998,14 @@ Start `ielm' if it's not already running."
       (define-key global-map (kbd "C-c n /") #'org-roam-find-file)
       (define-key global-map (kbd "C-c n b") #'org-roam-switch-to-buffer)
       (define-key global-map (kbd "C-c n d") #'org-roam-find-directory)
+      (define-key global-map (kbd "C-c n c") #'org-roam-capture)
+      (define-key global-map (kbd "C-C n t") #'org-roam-dailies-capture-today)
+      (define-key global-map (kbd "C-c n x") #'org-roam-dailies-find-date)
       (require 'org-roam-protocol)
       (require 'org-protocol)
       :custom
       (org-roam-directory "/home/mla/Dropbox-Decrypted/org-roam" "home of org roam")
+      (org-roam-dailies-directory "/home/mla/Dropbox-Decrypted/org-roam/daily")
       (org-roam-ref-capture-templates
        '(("d" "default" plain (function org-roam--capture-get-point)
         "%?"
@@ -1016,6 +1020,20 @@ Start `ielm' if it's not already running."
 #+ROAM_KEY: ${ref}
 - source :: ${ref}"
                :unnarrowed t)))
+      (org-roam-capture-templates
+       `(("d" "default" plain #'org-roam-capture--get-point
+           :file-name "%<%Y-%m-%d>-${slug}"
+           :head "#+title: ${title}\n#+ROAM_TAGS: %^{org-roam-tags}\n#+created: %u\n#+last_modified: %U\n%?"
+           :unnarrowed t
+           :prepend t
+           :jump-to-captured t)
+          ("l" "clipboard" plain #'org-roam-capture--get-point "%i%a"
+           :file-name "%<%Y%m%d%H%M%S>-${slug}"
+           :head "#+title: ${title}\n#+created: %u\n#+last_modified: %U\n#+ROAM_TAGS: %?"
+           :unnarrowed: t
+           :prepend: t
+           :jump-to-captured: t
+          )))
 
       :bind (:map org-roam-mode-map
               (("C-c n l" . org-roam)
@@ -1036,10 +1054,8 @@ Start `ielm' if it's not already running."
       (org-journal-date-format "%A, %d %B %Y"))
     (setq org-journal-enable-agenda-integration t)
 
-(use-package company-org-roam
-  :ensure t
-  :after org-roam
-  :config (push 'company-org-roam company-backends))
+(use-package helm-org
+  :ensure t)
 
 (use-package editorconfig
   :ensure t
@@ -1053,4 +1069,22 @@ Start `ielm' if it's not already running."
   :custom
   (spdx-copyright-holder 'auto)
   (spdx-project-detection 'auto))
-(put 'erase-buffer 'disabled nil)
+
+(use-package deft
+  :ensure t
+  :after org
+  :bind ("C-c n d" . deft)
+  :custom
+  (deft-recusive t)
+  (deft-use-filter-string-for-filename t)
+  (deft-default-extension "org")
+  (deft-directory "~/Dropbox-Decrypted/org-roam/")
+  )
+
+;;;
+;;; https://github.com/stardiviner/edebug-inline-result
+;;; https://github.com/stardiviner/edebug-inline-result
+;;; https://github.com/alpha-catharsis/sudo-utils
+;;;
+
+(put 'erase-buffer 'disabled nil)1
