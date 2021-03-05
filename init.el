@@ -1088,3 +1088,14 @@ Start `ielm' if it's not already running."
 ;;;
 
 (put 'erase-buffer 'disabled nil)1
+
+(use-package goggles
+  :demand t
+  :ensure t
+  :config
+  (goggles-mode)
+  (setq-default goggles-pulse t)) ;; set to nil to disable pulsing
+
+(use-package monkeytype
+   :demand t
+   :ensure t)
