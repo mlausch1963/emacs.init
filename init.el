@@ -608,39 +608,41 @@ Start `ielm' if it's not already running."
 (add-hook 'c-mode-common-hook #'mla-c-mode-keys)
 (add-hook 'c-mode-common-hook #'mla-c-mode-minor-modes)
 (add-hook 'makefile-mode-hook #'ws-no-tabs-highlight)
+(add-hook 'c-mode-hook 'lsp)
+(add-hook 'c-mode-common-hook #'ws-no-tabs-highlight)
 
-(use-package rtags
-  :ensure t
-  :init
-  (add-hook 'c-mode-common-hook  #'rtags-start-process-unless-running)
-  :demand
-  :bind
-  (:map c-mode-map
-        ("M-." . rtags-find-symbol-at-point)
-        ("S-." . rtags-find-references-at-point)
-        ("M-," . rtags-location-stack-back))
+;; (use-package rtags
+;;   :ensure t
+;;   :init
+;;   (add-hook 'c-mode-common-hook  #'rtags-start-process-unless-running)
+;;   :demand
+;;   :bind
+;;   (:map c-mode-map
+;;         ("M-." . rtags-find-symbol-at-point)
+;;         ("S-." . rtags-find-references-at-point)
+;;         ("M-," . rtags-location-stack-back))
 
-  :config
-  (progn
-    (rtags-enable-standard-keybindings nil "C-c R")
-    (setq rtags-autostart-diagnostics t)
-    (rtags-diagnostics)
-    (setq rtags-completions-enabled t)))
+;;   :config
+;;   (progn
+;;     (rtags-enable-standard-keybindings nil "C-c R")
+;;     (setq rtags-autostart-diagnostics t)
+;;     (rtags-diagnostics)
+;;     (setq rtags-completions-enabled t)))
 
 
-(use-package company-rtags
-  :config
-  (push 'company-rtags company-backends))
+;; (use-package company-rtags
+;;   :config
+;;   (push 'company-rtags company-backends))
 
-(use-package helm-rtags
-  :ensure t
-  :init
-  (setq rtags-use-helm t)
+;; (use-package helm-rtags
+;;   :ensure t
+;;   :init
+;;   (setq rtags-use-helm t)
 
-  :config
-  (setq rtags-display-result-backend 'helm))
+;;   :config
+;;   (setq rtags-display-result-backend 'helm))
 
-(use-package flycheck-rtags)
+;; (use-package flycheck-rtags)
 
 (defun lsp-go-install-save-hooks ()
   (add-hook 'before-save-hook #'lsp-format-buffer t t)
@@ -819,10 +821,12 @@ Start `ielm' if it's not already running."
   :ensure t
   :config
   (require 'dap-go)
+  (require 'dap-cpptools)
   (use-package dap-ui
     :ensure nil
     :config
     (dap-ui-mode 1)))
+
 
 (use-package gud
   :ensure t)
@@ -986,7 +990,6 @@ Start `ielm' if it's not already running."
   (add-hook 'yaml-mode-hook 'display-line-numbers-mode)
   :ensure t)
 
-;;; init.el ends here
 (put 'erase-buffer 'disabled nil)
 (use-package org-roam
       :ensure t
@@ -1099,3 +1102,5 @@ Start `ielm' if it's not already running."
 (use-package monkeytype
    :demand t
    :ensure t)
+
+;;; init.el ends here
