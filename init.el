@@ -774,8 +774,6 @@ Start `ielm' if it's not already running."
          (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp)
 
-
-
 (setq lsp-completion-provider :capf)
 
 (defun mla/on-venv-change-restart-pyls ()
@@ -1190,3 +1188,11 @@ Start `ielm' if it's not already running."
 (use-package exec-path-from-shell
   :ensure
   :init (exec-path-from-shell-initialize))
+
+(use-package perspective
+  :ensure t
+  :init (persp-mode))
+
+(use-package persp-projectile
+  :ensure t
+  :bind ("M-s-p" . projectile-persp-switch-project))
