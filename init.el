@@ -1195,4 +1195,23 @@ Start `ielm' if it's not already running."
 
 (use-package persp-projectile
   :ensure t
-  :bind ("M-s-p" . projectile-persp-switch-project))
+  :bind ("s-S p" . projectile-persp-switch-project))
+
+(use-package smartparens
+  :ensure t
+  :bind (:map smartparens-mode-map
+              ("C-M-f" . sp-forward-sexp )
+              ("C-M-b" . sp-backward-sexp)
+              ("C-M-u" . sp-backward-up-sexp)
+              ("C-M-d" . sp-down-sexp)
+              ("M-s" . sp-split-sexp)
+              ("M-j" . sp-join-sexp)
+              ("C->" . sp-forward-slurp-sexp)
+              ("C-<" . sp-forward-barf-sexp)
+              ("C-{" . sp-backward-slurp-sexp)
+              ("C-}" . sp-backward-barf-sexp)
+              ))
+
+(use-package ace-window
+  :ensure t
+  :bind (("M-o" . ace-window)))
