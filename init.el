@@ -570,7 +570,12 @@ Start `ielm' if it's not already running."
 
 
 (use-package yasnippet
-  :ensure t)
+  :ensure t
+  :config
+  (yas-reload-all)
+  (add-hook 'prog-mode-hook 'yas-minor-mode)
+  (add-hook 'text-mode-hook 'yas-minor-mode))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; C/C++ Mode
@@ -771,8 +776,6 @@ Start `ielm' if it's not already running."
          (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp)
 
-
-
 (setq lsp-completion-provider :capf)
 
 (defun mla/on-venv-change-restart-pyls ()
@@ -822,9 +825,30 @@ Start `ielm' if it's not already running."
   :config
   (require 'dap-go)
   (require 'dap-cpptools)
+  (require 'dap-lldb)
+  (require 'dap-gdb-lldb)
+  (dap-gdb-lldb-setup)
+  (dap-register-debug-template
+    "Rust::GDB Run Configuratrion"
+    (list :type "gdb"
+	  :request "launch"
+	  :name "GDB::Run"
+	  :gdbpath "rust-gdb"
+	  :target nil
+	  :cwd nil))
+  (dap-register-debug-template
+   "Rust::LLDB Run Configuration"
+     (list :type "lldb"
+           :request "launch"
+           :name "LLDB::Run"
+	   :gdbpath "rust-lldb"
+           ;; uncomment if lldb-mi is not in PATH
+           ;; :lldbmipath "path/to/lldb-mi"
+           ))
   (use-package dap-ui
     :ensure nil
     :config
+    (dap-ui-controls-mode 1)
     (dap-ui-mode 1)))
 
 
@@ -1103,4 +1127,93 @@ Start `ielm' if it's not already running."
    :demand t
    :ensure t)
 
-;;; init.el ends here
+;; rust development
+(use-package rustic
+  :ensure
+  :bind (:map rustic-mode-map
+              ("M-j" . lsp-ui-imenu)
+              ("M-?" . lsp-find-references)
+              ("C-c C-c l" . flycheck-list-errors)
+              ("C-c C-c a" . lsp-execute-code-action)
+              ("C-c C-c r" . lsp-rename)
+              ("C-c C-c q" . lsp-workspace-restart)
+              ("C-c C-c Q" . lsp-workspace-shutdown)
+              ("C-c C-c s" . lsp-rust-analyzer-status)
+              ("C-c C-c e" . lsp-rust-analyzer-expand-macro)
+              ("C-c C-c d" . dap-hydra)
+              ("C-c C-c h" . lsp-ui-doc-glance))
+  :config
+  ;; uncomment for less flashiness
+  ;; (setq lsp-eldoc-hook nil)
+  ;; (setq lsp-enable-symbol-highlighting nil)
+  ;; (setq lsp-signature-auto-activate nil)
+
+  ;; comment to disable rustfmt on save
+  (setq rustic-format-on-save t)
+  (add-hook 'rustic-mode-hook 'rk/rustic-mode-hook))
+
+(defun rk/rustic-mode-hook ()
+  ;; so that run C-c C-c C-r works without having to confirm
+  (setq-local buffer-save-without-query t))
+
+(defun company-yasnippet-or-completion ()
+  (interactive)
+  (or (do-yas-expand)
+      (company-complete-common)))
+
+(defun check-expansion ()
+  (save-excursion
+    (if (looking-at "\\_>") t
+      (backward-char 1)
+      (if (looking-at "\\.") t
+        (backward-char 1)
+        (if (looking-at "::") t nil)))))
+
+(defun do-yas-expand ()
+  (let ((yas/fallback-behavior 'return-nil))
+    (yas/expand)))
+
+(defun tab-indent-or-complete ()
+  (interactive)
+  (if (minibufferp)
+      (minibuffer-complete)
+    (if (or (not yas/minor-mode)
+            (null (do-yas-expand)))
+        (if (check-expansion)
+            (company-complete-common)
+          (indent-for-tab-command)))))
+
+; -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+;; for Cargo.toml and other config files
+
+(use-package toml-mode :ensure)
+(use-package exec-path-from-shell
+  :ensure
+  :init (exec-path-from-shell-initialize))
+
+(use-package perspective
+  :ensure t
+  :init (persp-mode))
+
+(use-package persp-projectile
+  :ensure t
+  :bind ("s-S p" . projectile-persp-switch-project))
+
+(use-package smartparens
+  :ensure t
+  :bind (:map smartparens-mode-map
+              ("C-M-f" . sp-forward-sexp )
+              ("C-M-b" . sp-backward-sexp)
+              ("C-M-u" . sp-backward-up-sexp)
+              ("C-M-d" . sp-down-sexp)
+              ("M-s" . sp-split-sexp)
+              ("M-j" . sp-join-sexp)
+              ("C->" . sp-forward-slurp-sexp)
+              ("C-<" . sp-forward-barf-sexp)
+              ("C-{" . sp-backward-slurp-sexp)
+              ("C-}" . sp-backward-barf-sexp)
+              ))
+
+(use-package ace-window
+  :ensure t
+  :bind (("M-o" . ace-window)))
