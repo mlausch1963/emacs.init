@@ -686,7 +686,11 @@ Start `ielm' if it's not already running."
   :mode (("\\.py\\'" . python-mode)))
 
 (use-package pyvenv
+  :ensure t
+  :defer t
+  :diminish
   :config
+  (setenv "WORKON_HOME" "/home/mla/python-envs")
   (add-hook 'pyython-mode-hook  #'pyvenv-tracking-mode)
   (add-hook 'python-mode-hook #'pyvenv-mode))
 
