@@ -768,8 +768,9 @@ Start `ielm' if it's not already running."
 
 (use-package lsp-mode
   :ensure t
-  :after (pyvenv)
+;;  :after (pyvenv)
   :config
+  (message "lsp-mode loaded")
   (setq lsp-prefer-flymake nil
         lsp-pyls-plugins-flake8-enabled t
         lsp-log-io t)
@@ -778,7 +779,8 @@ Start `ielm' if it's not already running."
          (typescript-mode . lsp)
          (python-mode . lsp-deferred)
          (lsp-mode . lsp-enable-which-key-integration))
-  :commands lsp)
+  :commands (lsp lsp-deferred))
+
 
 (setq lsp-completion-provider :capf)
 
@@ -822,6 +824,8 @@ Start `ielm' if it's not already running."
 
 (use-package lsp-treemacs
   :ensure t
+  :config
+  (lsp-treemacs-sync-mode 1)
   :commands lsp-treemacs-errors-list)
 
 (use-package dap-mode
@@ -1018,7 +1022,12 @@ Start `ielm' if it's not already running."
   (add-hook 'yaml-mode-hook 'display-line-numbers-mode)
   :ensure t)
 
-(put 'erase-buffer 'disabled nil)
+(use-package org
+  :ensure t
+  :config
+  (setq org-agenda-files (quote ("/home/mla/Dropbox-Decrypted/org")))
+  )
+
 (use-package org-roam
       :ensure t
       :hook
@@ -1197,11 +1206,13 @@ Start `ielm' if it's not already running."
 
 (use-package perspective
   :ensure t
-  :init (persp-mode))
+  :bind (("C-x b" . persp-switch-to-buffer*)
+         ("C-x k" . persp-kill-buffer*))
+  :custom
+  (persp-state-default-file (expand-file-name "perspectives.el" mla-personal-dir))
+  :init (persp-mode)
+  :hook (kill-emacs . persp-state-save))
 
-(use-package persp-projectile
-  :ensure t
-  :bind ("s-S p" . projectile-persp-switch-project))
 
 (use-package smartparens
   :ensure t
@@ -1221,3 +1232,12 @@ Start `ielm' if it's not already running."
 (use-package ace-window
   :ensure t
   :bind (("M-o" . ace-window)))
+
+
+;;(use-package lsp-jedi
+;;  :ensure t
+;;  :config
+;;  (with-eval-after-load "lsp-mode"
+;;    (add-to-list 'lsp-disabled-clients 'pyls)))
+;;
+;;    (add-to-list 'lsp-enabled-clients 'jedi)))
