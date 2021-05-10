@@ -366,15 +366,9 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   :after
     (rainbow-delimiter-mode)
   :config
-  (defun mla-visit-ielm ()
-    "Switch to default `ielm' buffer.
-Start `ielm' if it's not already running."
-    (interactive)
-    (crux-start-or-switch-to 'ielm "*ielm*"))
   (add-hook 'emacs-lisp-mode-hook #'eldoc-mode)
   (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
-  (define-key emacs-lisp-mode-map (kbd "C-c C-z") #'mla-visit-ielm)
-  (define-key emacs-lisp-mode-map (kbd "C-c C-c") #'eval-defun)
+   (define-key emacs-lisp-mode-map (kbd "C-c C-c") #'eval-defun)
   (define-key emacs-lisp-mode-map (kbd "C-c C-b") #'eval-buffer)
   (add-hook 'lisp-interaction-mode-hook #'eldoc-mode)
   (add-hook 'eval-expression-minibuffer-setup-hook #'eldoc-mode))
@@ -421,13 +415,13 @@ Start `ielm' if it's not already running."
   (require 'shell)
   :config
   (require 'helm-config)
-  (setq projectile-completion-system       'helm)
-  (setq helm-split-window-in-side-p         t
-      helm-buffers-fuzzy-matching           t
-      helm-move-to-line-cycle-in-source     t
-      helm-ff-search-library-in-sexp        t
-      helm-ff-file-name-history-use-recentf t
-      helm-split-window-default-side        'other)
+  (setq projectile-complet\ion-system 'helm)
+  (setq helm-split-window-inside-p t
+        helm-buffers-fuzzy-matching t
+        helm-move-to-line-cycle-in-source t
+        helm-ff-search-library-in-sexp t
+        helm-ff-file-name-history-use-recentf t
+        helm-split-window-default-side 'other)
 
   (global-unset-key (kbd "C-x c"))
   (helm-mode 1)
@@ -772,12 +766,19 @@ Start `ielm' if it's not already running."
   :config
   (message "lsp-mode loaded")
   (setq lsp-prefer-flymake nil
-        lsp-pyls-plugins-flake8-enabled t
-        lsp-log-io t)
+        lsp-pylsp-plugins-flake8-enabled t
+        lsp-pylsp-plugins-autopep8-enabled nil
+        lsp-pylsp-plugins-flake8-enabled t
+        lsp-pylsp-plugins-pylint-enabled t
+        lsp-pylsp-plugins-yapf-enabled t
+        lsp-log-io t
+        lsp-rust-analyzer-cargo-watch-command "clippy")
   :hook (
          (terraform-mode . lsp)
          (typescript-mode . lsp)
-         (python-mode . lsp-deferred)
+         (python-mode . (lambda ()
+                          (require 'lsp-pylsp)
+                          (lsp)))
          (lsp-mode . lsp-enable-which-key-integration))
   :commands (lsp lsp-deferred))
 
@@ -1183,14 +1184,14 @@ Start `ielm' if it's not already running."
         (if (looking-at "::") t nil)))))
 
 (defun do-yas-expand ()
-  (let ((yas/fallback-behavior 'return-nil))
-    (yas/expand)))
+  (let ((yas-fallback-behavior 'return-nil))
+    (yas-expand)))
 
 (defun tab-indent-or-complete ()
   (interactive)
   (if (minibufferp)
       (minibuffer-complete)
-    (if (or (not yas/minor-mode)
+    (if (or (not yas-minor-mode)
             (null (do-yas-expand)))
         (if (check-expansion)
             (company-complete-common)
