@@ -759,6 +759,9 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 ;       (lsp--set-configuration lsp-cfg)))
 
 
+(use-package lsp-jedi
+  :ensure t
+  :config)
 
 (use-package lsp-mode
   :ensure t
@@ -766,17 +769,13 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   :config
   (message "lsp-mode loaded")
   (setq lsp-prefer-flymake nil
-        lsp-pylsp-plugins-flake8-enabled t
-        lsp-pylsp-plugins-autopep8-enabled nil
-        lsp-pylsp-plugins-flake8-enabled t
-        lsp-pylsp-plugins-pylint-enabled t
-        lsp-pylsp-plugins-yapf-enabled t
-        lsp-log-io t)
+        lsp-log-io t
+        lsp-rust-analyzer-cargo-watch-command "clippy")
   :hook (
          (terraform-mode . lsp)
          (typescript-mode . lsp)
          (python-mode . (lambda ()
-                          (require 'lsp-pylsp)
+                          (require 'lsp-jedi)
                           (lsp)))
          (lsp-mode . lsp-enable-which-key-integration))
   :commands (lsp lsp-deferred))
@@ -1239,12 +1238,3 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 (use-package ace-window
   :ensure t
   :bind (("M-o" . ace-window)))
-
-
-;;(use-package lsp-jedi
-;;  :ensure t
-;;  :config
-;;  (with-eval-after-load "lsp-mode"
-;;    (add-to-list 'lsp-disabled-clients 'pyls)))
-;;
-;;    (add-to-list 'lsp-enabled-clients 'jedi)))
