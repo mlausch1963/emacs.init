@@ -771,8 +771,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
         lsp-pylsp-plugins-flake8-enabled t
         lsp-pylsp-plugins-pylint-enabled t
         lsp-pylsp-plugins-yapf-enabled t
-        lsp-log-io t
-        lsp-rust-analyzer-cargo-watch-command "clippy")
+        lsp-log-io t)
   :hook (
          (terraform-mode . lsp)
          (typescript-mode . lsp)
