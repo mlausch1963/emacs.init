@@ -1163,12 +1163,19 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   ;; (setq lsp-signature-auto-activate nil)
 
   ;; comment to disable rustfmt on save
-  (setq rustic-format-on-save t)
+  (setq rustic-format-on-save nil
+        rustic-format-trigger nil
+        rustic-lsp-format t
+        lsp-rust-analyzer-cargo-watch-command "clippy")
   (add-hook 'rustic-mode-hook 'rk/rustic-mode-hook))
 
 (defun rk/rustic-mode-hook ()
   ;; so that run C-c C-c C-r works without having to confirm
   (setq-local buffer-save-without-query t))
+
+(use-package cargo-mode
+  :ensure t
+  (add-hook 'rust-mode-hook 'cargo-minor-mode))
 
 (defun company-yasnippet-or-completion ()
   (interactive)
