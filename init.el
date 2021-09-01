@@ -774,6 +774,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   :hook (
          (terraform-mode . lsp)
          (typescript-mode . lsp)
+         (ruby-mode . lsp)
          (python-mode . (lambda ()
                           (require 'lsp-jedi)
                           (lsp)))
@@ -1238,3 +1239,5 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 (use-package ace-window
   :ensure t
   :bind (("M-o" . ace-window)))
+
+(setq org-roam-v2-ack t)
