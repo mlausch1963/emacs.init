@@ -778,11 +778,11 @@ This is DEPRECATED, use %s instead." mla-modules-file))
          (python-mode . (lambda ()
                           (require 'lsp-jedi)
                           (lsp)))
-         (lsp-mode . lsp-enable-which-key-integration))
+         (lsp-mode . lsp-enable-which-key-integration)
+         (lsp-mode . lsp-lens-mode))
   :commands (lsp lsp-deferred))
 
 
-(setq lsp-completion-provider :capf)
 
 (defun mla/on-venv-change-restart-pyls ()
   (let ((venv (lsp-session-get-metadata :venv)))
@@ -870,6 +870,15 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   :ensure t
   :config
   (beacon-mode 1))
+
+(use-package company
+  :hook (python-mode . company-mode)
+  :config
+  (setq lsp-completion-provider :capf))
+
+(use-package posframe
+  ;; grame is needed by dap-mode, must be installed manually
+  )
 
 (use-package treemacs
   :ensure t
@@ -1174,6 +1183,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 
 (use-package cargo-mode
   :ensure t
+  :config
   (add-hook 'rust-mode-hook 'cargo-minor-mode))
 
 (defun company-yasnippet-or-completion ()
@@ -1239,5 +1249,12 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 (use-package ace-window
   :ensure t
   :bind (("M-o" . ace-window)))
+
+(use-package adoc-mode
+  :ensure t
+  :mode (("\\.adoc\\'" . adoc-mode)
+         ("\\.txt\\'" . adoc-mode)))
+
+
 
 (setq org-roam-v2-ack t)
