@@ -652,6 +652,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   (go-mode . ws-no-tabs-highlight)
   (go-mode . lsp-deferred)
   (go-mode . lsp-go-install-save-hooks)
+  (go-mode . company-mode)
   :ensure t)
 
 (use-package go-stacktracer
@@ -759,9 +760,9 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 ;       (lsp--set-configuration lsp-cfg)))
 
 
-(use-package lsp-jedi
-  :ensure t
-  :config)
+;(use-package lsp-jedi
+;  :ensure t
+;  :config)
 
 (use-package lsp-mode
   :ensure t
@@ -776,7 +777,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
          (typescript-mode . lsp)
          (ruby-mode . lsp)
          (python-mode . (lambda ()
-                          (require 'lsp-jedi)
+                          (require 'lsp-pylsp)
                           (lsp)))
          (lsp-mode . lsp-enable-which-key-integration)
          (lsp-mode . lsp-lens-mode))
