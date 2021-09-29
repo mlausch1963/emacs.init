@@ -177,6 +177,10 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 (column-number-mode t)
 (size-indication-mode t)
 
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1))
+
 ;; enable y/n answers
 (fset 'yes-or-no-p 'y-or-n-p)
 
@@ -351,6 +355,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 
 (use-package which-key
   :ensure t
+  :diminish
   :init (which-key-mode +1))
 
 (use-package eldoc
@@ -668,6 +673,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 
 (use-package flycheck
   :ensure t
+  :diminish
   :init (global-flycheck-mode))
 
 
@@ -854,11 +860,15 @@ This is DEPRECATED, use %s instead." mla-modules-file))
            ;; uncomment if lldb-mi is not in PATH
            ;; :lldbmipath "path/to/lldb-mi"
            ))
-  (use-package dap-ui
-    :ensure nil
-    :config
-    (dap-ui-controls-mode 1)
-    (dap-ui-mode 1)))
+  :hook
+  (dap-stopped . (lambda (arg) called-interactively #'dap-hydra)))
+
+(use-package dap-ui
+  :ensure nil
+  :after dap-mode
+  :config
+  (dap-ui-controls-mode 1)
+  (dap-ui-mode 1))
 
 
 (use-package gud
@@ -869,6 +879,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 
 (use-package beacon
   :ensure t
+  :diminish
   :config
   (beacon-mode 1))
 
@@ -985,7 +996,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   :config
   (setq bookmark-version-control t)
   (setq delete-old-versions t)
-  :load-path "vendor/bookark-plus")
+  :load-path "vendor/bookmark-plus")
 
 (use-package ein
   :ensure t)
@@ -1013,6 +1024,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 (use-package goggles
   :demand t
   :ensure t
+  :diminish
   :config
   (goggles-mode)
   (setq-default goggles-pulse t)) ;; set to nil to disable pulsing
@@ -1040,8 +1052,8 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 
 (use-package org-roam
       :ensure t
-      :hook
-      (after-init . org-roam-mode)
+;      :hook
+;      (after-init . org-roam-mode)
       :config
       (define-key global-map (kbd "C-c n r") #'org-roam-buffer-toggle-display)
       (define-key global-map (kbd "C-c n i") #'org-roam-insert)
@@ -1061,30 +1073,18 @@ This is DEPRECATED, use %s instead." mla-modules-file))
         "%?"
         :file-name "${slug}"
         :head "#+TITLE: ${title}\n"
-        :unarrowed t)))
-      (org-roam-capture-ref-templates
-        '(("r" "ref" plain (function org-roam-capture--get-point)
-               "%?"
-               :file-name "websites/${slug}"
-               :head "#+TITLE: ${title}
+        :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                           "#+title: ${title}\n")
+        :unarrowed t))
+       '(("r" "ref" plain (function org-roam-capture--get-point)
+          "%?"
+          :file-name "websites/${slug}"
+          :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                             "#+title: ${title}\n")
+          :head "#+TITLE: ${title}
 #+ROAM_KEY: ${ref}
 - source :: ${ref}"
-               :unnarrowed t)))
-      (org-roam-capture-templates
-       `(("d" "default" plain #'org-roam-capture--get-point
-           :file-name "%<%Y-%m-%d>-${slug}"
-           :head "#+title: ${title}\n#+ROAM_TAGS: %^{org-roam-tags}\n#+created: %u\n#+last_modified: %U\n%?"
-           :unnarrowed t
-           :prepend t
-           :jump-to-captured t)
-          ("l" "clipboard" plain #'org-roam-capture--get-point "%i%a"
-           :file-name "%<%Y%m%d%H%M%S>-${slug}"
-           :head "#+title: ${title}\n#+created: %u\n#+last_modified: %U\n#+ROAM_TAGS: %?"
-           :unnarrowed: t
-           :prepend: t
-           :jump-to-captured: t
-          )))
-
+          :unnarrowed t)))
       :bind (:map org-roam-mode-map
               (("C-c n l" . org-roam)
                ("C-c n f" . org-roam-find-file)
@@ -1109,6 +1109,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 
 (use-package editorconfig
   :ensure t
+  :diminish
   :config
   (editorconfig-mode 1))
 
@@ -1257,5 +1258,6 @@ This is DEPRECATED, use %s instead." mla-modules-file))
          ("\\.txt\\'" . adoc-mode)))
 
 
-
-(setq org-roam-v2-ack t)
+(use-package swiper
+  :ensure t
+  :bind (("C-s" . swiper)))
