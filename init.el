@@ -222,7 +222,7 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 (set-keyboard-coding-system 'utf-8)
 
 
-
+(global-set-key (kbd "C-z") #'undo)
 (global-set-key (kbd "C-x C-b") #'ibuffer)
 
 ;; align code in a pretty way
