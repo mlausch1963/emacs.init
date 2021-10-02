@@ -2,11 +2,6 @@
 ;;
 ;; Copyright (c) 2019 Michael Lausch
 ;;
-;; Author: Bozhidar Batsov <bozhidar@batsov.com>
-;; URL: http://batsov.com/prelude
-;; Version: 1.0.0
-;; Keywords: convenience
-
 ;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
@@ -33,16 +28,11 @@
 
 ;;; Code:
 
-;; Added by Package.el.  This must come before configurations of
-;; installed packages.  Don't delete this line.  If you don't want it,
-;; just comment it out by adding a semicolon to the start of the line.
-;; You may delete these explanatory comments.
-;(package-initialize)
 
-
-;; Take a look at https://github.com/danielmartin/dotfiles/blob/master/.emacs.d/init.el
-;;                https://ladicle.com/post/config/
-;; for lsp hints i used: https://www.mortens.dev/blog/emacs-and-the-language-server-protocol/
+(defvar use-helm-p nil)
+(defvar use-vertico-p t)
+(defvar use-consult-p t)
+(defvar use-orderless-p t)
 
 (when (version< emacs-version "25.1")
   (error "Mla requires GNU Emacs 25.1 or newer, but you're running %s" emacs-version))
@@ -79,25 +69,16 @@
   "The home of Mla's core functionality.")
 (defvar mla-modules-dir (expand-file-name  "modules" mla-dir)
   "This directory houses all of the built-in Mla modules.")
-(defvar mla-personal-dir (expand-file-name "personal" mla-dir)
-  "This directory is for your personal configuration.
 
-Users of Emacs Mla are encouraged to keep their personal configuration
-changes in this directory.  All Emacs Lisp files there are loaded automatically
-by Mla.")
-(defvar mla-personal-preload-dir (expand-file-name "preload" mla-personal-dir)
-  "This directory is for your personal configuration, that you want loaded before Mla.")
+(defvar mla-personal-dir (expand-file-name "personal" mla-dir)
+  "This directory is for your personal configuration.")
+
 (defvar mla-vendor-dir (expand-file-name "vendor" mla-dir)
   "This directory houses packages that are not yet available in ELPA (or MELPA).")
 (defvar mla-savefile-dir (expand-file-name "savefile" mla-dir)
   "This folder stores all the automatically generated save/history-files.")
 (defvar mla-modules-file (expand-file-name "mla-modules.el" mla-personal-dir)
   "This file contains a list of modules that will be loaded by Mla.")
-(defvar mla-deprecated-modules-file
-  (expand-file-name "mla-modules.el" mla-dir)
-  (format "This file may contain a list of Mla modules.
-
-This is DEPRECATED, use %s instead." mla-modules-file))
 
 (unless (file-exists-p mla-savefile-dir)
   (make-directory mla-savefile-dir))
@@ -145,7 +126,6 @@ This is DEPRECATED, use %s instead." mla-modules-file))
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 
-(require 'bind-key)
 (require 'bind-key)
 
 ; This is only needed once, near the top of the file
@@ -413,96 +393,332 @@ This is DEPRECATED, use %s instead." mla-modules-file))
                       (flyspell-mode 1)))
   :mode (("\\.sls\\'" . salt-mode)))
 
-(use-package helm
-  :ensure t
-  :diminish helm-mode
-  :init
-  (require 'shell)
-  :config
-  (require 'helm-config)
-  (setq projectile-complet\ion-system 'helm)
-  (setq helm-split-window-inside-p t
-        helm-buffers-fuzzy-matching t
-        helm-move-to-line-cycle-in-source t
-        helm-ff-search-library-in-sexp t
-        helm-ff-file-name-history-use-recentf t
-        helm-split-window-default-side 'other)
 
-  (global-unset-key (kbd "C-x c"))
-  (helm-mode 1)
-  :hook
-  (eshell-mode . (lambda ()
-                   (substitute-key-definition 'eshell-list-history 'helm-eshell-history eshell-mode-map)))
-  :bind-keymap
-  ("C-c h" . helm-command-prefix)
-  :bind (
-         (("M-x" . helm-M-x)
-          ("M-y" . helm-show-kill-ring)
-          ("C-x C-f" . helm-find-files)
-          ("C-x f" . helm-recentf)
-          ("C-c o" . helm-occur)
-          ("C-x b" . helm-mini)
-          ("C-x C-b" . helm-buffers-list)
-          ("C-h f" . helm-apropos)
-          ("C-h r" . helm-info-emacs)
-          ("C-c C-l" . helm-locate-library))
-         :map minibuffer-local-map
-         ("C-c  C-l" . 'helm-minibuffer-history)
-         :map isearch-mode-map
-         ("C-o" . 'helm-occur-from-isearch)
-         :map shell-mode-map
-         ("C-c C-l" . 'helm-comint-input-ring)
-         :map helm-map
-         ("<tab>" . 'helm-execute-persistent-action)
-         :map helm-map
-         ("C-i" . 'helm-execute-persistent-action)
-         ("C-z" . helm-select-action)))
+(if use-vertico-p
+    (progn
+      (use-package vertico
+        :ensure t
+        :bind
+        (:map vertico-map
+              ("C-j" . vertico-next)
+              ("C-k" . vertico-previous)
+              ("C-f" . vertico-exit)
+              :map minibuffer-local-map
+              ("M-h" . backward-kill-word))
+        :init
+        (vertico-mode))
+      (use-package marginalia
+        :after vertico
+        :ensure t
+        :custom
+        (marginalia-annotator '(marginalia-annotators-heavy marginalia-annotators-light nil))
+        :init
+        (marginalia-mode))
 
-(use-package helm-swoop
-  :ensure t
-  :bind
-  (("C-S-s" . helm-swoop-without-pre-input)
-   ("S-s" . helm-swoop)))
+      (use-package emacs
+        :init
+        ;; Add prompt indicator to `completing-read-multiple'.
+        ;; Alternatively try `consult-completing-read-multiple'.
+        (defun crm-indicator (args)
+          (cons (concat "[CRM] " (car args)) (cdr args)))
+        (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+        ;; Do not allow the cursor in the minibuffer prompt
+        (setq minibuffer-prompt-properties
+              '(read-only t cursor-intangible t face minibuffer-prompt))
+        (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+        ;; Emacs 28: Hide commands in M-x which do not work in the current mode.
+        ;; Vertico commands are hidden in normal buffers.
+        (setq read-extended-command-predicate
+              #'command-completion-default-include-p)
+        ;; Enable recursive minibuffers
+        (setq enable-recursive-minibuffers t))
+      ))
 
-(use-package helm-descbinds
-  :ensure t
-  :init
-  (helm-descbinds-mode))
+(if use-consult-p
+    (progn
+      ;; Example configuration for Consult
+      (use-package consult
+        :ensure t
+        ;; Replace bindings. Lazily loaded due by `use-package'.
+        :bind (;; C-c bindings (mode-specific-map)
+               ("C-c h" . consult-history)
+               ("C-c m" . consult-mode-command)
+               ("C-c b" . consult-bookmark)
+               ("C-c k" . consult-kmacro)
+               ;; C-x bindings (ctl-x-map)
+               ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+               ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+               ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+               ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+               ;; Custom M-# bindings for fast register access
+               ("M-#" . consult-register-load)
+               ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+               ("C-M-#" . consult-register)
+               ;; Other custom bindings
+               ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+               ("<help> a" . consult-apropos)            ;; orig. apropos-command
+               ;; M-g bindings (goto-map)
+               ("M-g e" . consult-compile-error)
+               ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+               ("M-g g" . consult-goto-line)             ;; orig. goto-line
+               ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+               ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+               ("M-g m" . consult-mark)
+               ("M-g k" . consult-global-mark)
+               ("M-g i" . consult-imenu)
+               ("M-g I" . consult-imenu-multi)
+               ;; M-s bindings (search-map)
+               ("M-s f" . consult-find)
+               ("M-s F" . consult-locate)
+               ("M-s g" . consult-grep)
+               ("M-s G" . consult-git-grep)
+               ("M-s r" . consult-ripgrep)
+               ("M-s l" . consult-line)
+               ("M-s L" . consult-line-multi)
+               ("M-s m" . consult-multi-occur)
+               ("M-s k" . consult-keep-lines)
+               ("M-s u" . consult-focus-lines)
+               ;; Isearch integration
+               ("M-s e" . consult-isearch)
+               :map isearch-mode-map
+               ("M-e" . consult-isearch)                 ;; orig. isearch-edit-string
+               ("M-s e" . consult-isearch)               ;; orig. isearch-edit-string
+               ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+               ("M-s L" . consult-line-multi))           ;; needed by consult-line to detect isearch
 
-(use-package helm-git-grep
-  :ensure t
-  :bind
-  (("C-c j" . helm-git-grep)
-   ("C-c J" . helm-git-grep-at-point)))
+        ;; Enable automatic preview at point in the *Completions* buffer.
+        ;; This is relevant when you use the default completion UI,
+        ;; and not necessary for Vertico, Selectrum, etc.
+        :hook (completion-list-mode . consult-preview-at-point-mode)
 
-(use-package helm-ls-git
-  :ensure t
-  :bind
-  (("C-c g" . helm-ls-git-ls)))
+        ;; The :init configuration is always executed (Not lazy)
+        :init
 
-(use-package helm-make
-  :ensure t
-  :bind
-  (("C-c K" . helm-make)))
+        ;; Optionally configure the register formatting. This improves the register
+        ;; preview for `consult-register', `consult-register-load',
+        ;; `consult-register-store' and the Emacs built-ins.
+        (setq register-preview-delay 0
+              register-preview-function #'consult-register-format)
+
+        ;; Optionally tweak the register preview window.
+        ;; This adds thin lines, sorting and hides the mode line of the window.
+        (advice-add #'register-preview :override #'consult-register-window)
+
+        ;; Optionally replace `completing-read-multiple' with an enhanced version.
+        (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+
+        ;; Use Consult to select xref locations with preview
+        (setq xref-show-xrefs-function #'consult-xref
+              xref-show-definitions-function #'consult-xref)
+
+        ;; Configure other variables and modes in the :config section,
+        ;; after lazily loading the package.
+        :config
+
+        ;; Optionally configure preview. The default value
+        ;; is 'any, such that any key triggers the preview.
+        ;; (setq consult-preview-key 'any)
+        ;; (setq consult-preview-key (kbd "M-."))
+        ;; (setq consult-preview-key (list (kbd "<S-down>") (kbd "<S-up>")))
+        ;; For some commands and buffer sources it is useful to configure the
+        ;; :preview-key on a per-command basis using the `consult-customize' macro.
+        (consult-customize
+         consult-theme
+         :preview-key '(:debounce 0.2 any)
+         consult-ripgrep consult-git-grep consult-grep
+         consult-bookmark consult-recent-file consult-xref
+         consult--source-file consult--source-project-file consult--source-bookmark
+         :preview-key (kbd "M-."))
+
+        ;; Optionally configure the narrowing key.
+        ;; Both < and C-+ work reasonably well.
+        (setq consult-narrow-key "<") ;; (kbd "C-+")
+
+        ;; Optionally make narrowing help available in the minibuffer.
+        ;; You may want to use `embark-prefix-help-command' or which-key instead.
+        ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+
+        ;; Optionally configure a function which returns the project root directory.
+        ;; There are multiple reasonable alternatives to chose from.
+  ;;;; 1. project.el (project-roots)
+;;        (setq consult-project-root-function
+  ;;            (lambda ()
+    ;;            (when-let (project (project-current))
+      ;;            (car (project-roots project)))))
+  ;;;; 2. projectile.el (projectile-project-root)
+        (autoload 'projectile-project-root "projectile")
+        (setq consult-project-root-function #'projectile-project-root)
+  ;;;; 3. vc.el (vc-root-dir)
+        ;; (setq consult-project-root-function #'vc-root-dir)
+  ;;;; 4. locate-dominating-file
+        ;; (setq consult-project-root-function (lambda () (locate-dominating-file "." ".git")))
+        )
+      (use-package embark
+        :ensure t
+
+        :bind
+        (("C-." . embark-act)         ;; pick some comfortable binding
+         ("C-;" . embark-dwim)        ;; good alternative: M-.
+         ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+
+        :init
+
+        ;; Optionally replace the key help with a completing-read interface
+        (setq prefix-help-command #'embark-prefix-help-command)
+
+        :config
+
+        ;; Hide the mode line of the Embark live/completions buffers
+        (add-to-list 'display-buffer-projectilealist
+                     '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                       nil
+                       (window-parameters (mode-line-format . none)))))
+
+      ;; Consult users will also want the embark-consult package.
+      (use-package embark-consult
+        :ensure t
+        :after (embark consult)
+        :demand t ; only necessary if you have the hook below
+        ;; if you want to have consult previews as you move around an
+        ;; auto-updating embark collect buffer
+        :hook
+        (embark-collect-mode . consult-preview-at-point-mode))
+
+      ))
+
+(if use-orderless-p
+    (progn
+      (use-package orderless
+        :ensure t
+        :custom
+        completion-styles '(orderless))
+
+      (defun flex-if-twiddle (pattern _index _total)
+        (when (string-suffix-p "~" pattern)
+          `(orderless-flex . ,(substring pattern 0 -1))))
+
+      ;; Maybe use this:
+      (defun mla/orderless-initialism-dispatcher (pattern _index _total)
+        "Leading initialism  dispatcher using the comma suffix.
+It matches PATTERN _INDEX and _TOTAL according to how Orderless
+parses its input."
+        (when (string-suffix-p "," pattern)
+          `(orderless-strict-leading-initialism . ,(substring pattern 0 -1))))
 
 
+      (defun first-initialism (pattern index _total)
+        (if (= index 0) 'orderless-initialism))
+
+      (defun without-if-bang (pattern _index _total)
+        (cond
+         ((equal "!" pattern)
+          '(orderless-literal . ""))
+         ((string-prefix-p "!" pattern)
+          `(orderless-without-literal . ,(substring pattern 1)))))
+
+      (setq orderless-matching-styles '(orderless-regexp)
+            orderless-style-dispatchers '(mla/orderless-initialism-dispatcher ; first-initialism
+                                          flex-if-twiddle
+                                          without-if-bang))))
+
+
+(if use-helm-p
+    (progn
+      (use-package helm
+        :ensure t
+        :diminish helm-mode
+        :init
+        (require 'shell)
+        :config
+        (require 'helm-config)
+        (setq projectile-complet\ion-system 'helm)
+        (setq helm-split-window-inside-p t
+              helm-buffers-fuzzy-matching t
+              helm-move-to-line-cycle-in-source t
+              helm-ff-search-library-in-sexp t
+              helm-ff-file-name-history-use-recentf t
+              helm-split-window-default-side 'other)
+
+        (global-unset-key (kbd "C-x c"))
+        (helm-mode 1)
+        :hook
+        (eshell-mode . (lambda ()
+                         (substitute-key-definition 'eshell-list-history 'helm-eshell-history eshell-mode-map)))
+        :bind-keymap
+        ("C-c h" . helm-command-prefix)
+        :bind (
+               (("M-x" . helm-M-x)
+                ("M-y" . helm-show-kill-ring)
+                ("C-x C-f" . helm-find-files)
+                ("C-x f" . helm-recentf)
+                ("C-c o" . helm-occur)
+                ("C-x b" . helm-mini)
+                ("C-x C-b" . helm-buffers-list)
+                ("C-h f" . helm-apropos)
+                ("C-h r" . helm-info-emacs)
+                ("C-c C-l" . helm-locate-library))
+               :map minibuffer-local-map
+               ("C-c  C-l" . 'helm-minibuffer-history)
+               :map isearch-mode-map
+               ("C-o" . 'helm-occur-from-isearch)
+               :map shell-mode-map
+               ("C-c C-l" . 'helm-comint-input-ring)
+               :map helm-map
+               ("<tab>" . 'helm-execute-persistent-action)
+               :map helm-map
+               ("C-i" . 'helm-execute-persistent-action)
+               ("C-z" . helm-select-action)))
+
+      (use-package helm-swoop
+        :ensure t
+        :bind
+        (("C-S-s" . helm-swoop-without-pre-input)
+         ("S-s" . helm-swoop)))
+
+      (use-package helm-descbinds
+        :ensure t
+        :init
+        (helm-descbinds-mode))
+
+      (use-package helm-git-grep
+        :ensure t
+        :bind
+        (("C-c j" . helm-git-grep)
+         ("C-c J" . helm-git-grep-at-point)))
+
+      (use-package helm-ls-git
+        :ensure t
+        :bind
+        (("C-c g" . helm-ls-git-ls)))
+
+      (use-package helm-make
+        :ensure t
+        :bind
+        (("C-c K" . helm-make)))
+
+      (use-package helm-projectile
+        :ensure t
+        :config
+        :after (helm projectile)
+        (helm-projectile-on))
+      (use-package helm-lsp
+        :ensure t
+        :after (helm
+        :commands helm-lsp-workspace-symbol)
+      )))
 
 (use-package projectile
   :ensure t
-  :init
-  (setq projectile-completion-system 'helm)
+  :diminish projectile-mode
   :config
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (projectile-mode +1)
+  :init
   (setq projectile-cache-file (expand-file-name
                                "bookmarks"  mla-savefile-dir))
-  :delight '(:eval (concat " " (projectile-project-name)))
-  )
+  (setq projectile-switch-project-action #'projectile-dired)
+  :bind-keymap
+  ("C-c p" . projectile-command-map))
 
-(use-package helm-projectile
-  :ensure t
-  :config
-  (helm-projectile-on))
 
 (use-package exec-path-from-shell
   :ensure t
@@ -708,68 +924,6 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   )
 
 
-;;;(defun mla/get-pylint-venv-path ()
-;  "Calculate the pylint exec path from active venv"
-;  (when pyvenv-activate
-;    (setq flycheck-python-pylint-executable
-;          (concat (file-name-as-directory
-;                   (concat (file-name-as-directory pyvenv-activate) "bin"))
-;            "pylint"))))
-
-
-;(defun mla/set-pylint-from-venv ()
-;  "Set the pylint executable depending on the virtualenv setting."
-;  (setq flycheck-python-pylint-executable (mla/get-pylint-venv-path)))
-
-;(add-hook 'flycheck-before-syntax-check-hook
-;          #'mla/set-pylint-from-venv 'local)
-
-;:plugins.jedi_completion.enabled t
-;; :plugins.jedi_definition.follow_imports t
-;; :configurationSources ["pycodestyle"]
-;; :plugins.jedi_completion.enabled t
-;; :plugins.jedi_definition.enabled t
-;; :plugins.jedi_definition.follow_imports nil
-;; :plugins.jedi_definition.follow_builtin_imports nil
-;; :plugins.jedi_hover.enabled t
-;; :plugins.jedi_references.enabled t
-;; :plugins.jedi_signature_help.enabled nil
-;; :plugins.jedi_symbols.enabled nil
-;; :plugins.jedi_symbols.all_scopes t
-;; :plugins.mccabe.enabled nil
-;; :plugins.mccabe.threshold 15
-;; :plugins.preload.enabled t
-;; :plugins.preload.modules nil
-;; :plugins.pycodestyle.enabled t
-;; :plugins.pycodestyle.exclude nil
-;; :plugins.pycodestyle.filename nil
-;; :plugins.pycodestyle.select nil
-;; :plugins.pycodestyle.ignore nil
-;; :plugins.pycodestyle.hangClosing nil
-;; :plugins.pycodestyle.maxLineLength nil
-;; :plugins.pydocstyle.enabled nil
-;; :plugins.pydocstyle.convention nil
-;; :plugins.pydocstyle.addIgnore nil
-;; :plugins.pydocstyle.addSelect nil
-;; :plugins.pydocstyle.ignore nil
-;; :plugins.pydocstyle.select nil
-;; :plugins.pydocstyle.match "(?!test_).*.py"
-;; :plugins.pydocstyle.matchDir nil
-;; :plugins.pyflakes.enabled t
-;; :plugins.rope_completion.enabled t
-;; :plugins.yapf.enabled t
-;; :rope.extensionModules nil
-;; :rope.ropeFolder nil
-
-;(defun mla/set-pyls-config ()
-;     (let ((lsp-cfg `(:pyls (:plugins.pylint nil))))
-;       (lsp--set-configuration lsp-cfg)))
-
-
-;(use-package lsp-jedi
-;  :ensure t
-;  :config)
-
 (use-package lsp-mode
   :ensure t
 ;;  :after (pyvenv)
@@ -804,10 +958,6 @@ This is DEPRECATED, use %s instead." mla-modules-file))
           (message "pyvenv post hook: restarting pylsp")
           (lsp-workspace-restart it)))))
 
-;(trace-function 'mla/on-venv-change-restart-pyls)
-
-;(add-hook 'pyvenv-post-activate-hooks #'mla/on-venv-change-restart-pyls)
-
 (use-package lsp-ui
   :ensure t
   :after flycheck
@@ -825,9 +975,6 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   :commands lsp-ui-mode)
 
 
-(use-package helm-lsp
-  :ensure t
-  :commands helm-lsp-workspace-symbol)
 
 (use-package lsp-treemacs
   :ensure t
@@ -1051,48 +1198,46 @@ This is DEPRECATED, use %s instead." mla-modules-file))
   )
 
 (use-package org-roam
-      :ensure t
-;      :hook
-;      (after-init . org-roam-mode)
-      :config
-      (define-key global-map (kbd "C-c n r") #'org-roam-buffer-toggle-display)
-      (define-key global-map (kbd "C-c n i") #'org-roam-insert)
-      (define-key global-map (kbd "C-c n /") #'org-roam-find-file)
-      (define-key global-map (kbd "C-c n b") #'org-roam-switch-to-buffer)
-      (define-key global-map (kbd "C-c n d") #'org-roam-find-directory)
-      (define-key global-map (kbd "C-c n c") #'org-roam-capture)
-      (define-key global-map (kbd "C-C n t") #'org-roam-dailies-capture-today)
-      (define-key global-map (kbd "C-c n x") #'org-roam-dailies-find-date)
-      (require 'org-roam-protocol)
-      (require 'org-protocol)
-      :custom
-      (org-roam-directory "/home/mla/Dropbox-Decrypted/org-roam" "home of org roam")
-      (org-roam-dailies-directory "/home/mla/Dropbox-Decrypted/org-roam/daily")
-      (org-roam-ref-capture-templates
-       '(("d" "default" plain (function org-roam--capture-get-point)
-        "%?"
-        :file-name "${slug}"
-        :head "#+TITLE: ${title}\n"
-        :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+  :ensure t
+  :init
+  (setq org-roam-v2-ack t)
+  (require 'org-roam-protocol)
+  (require 'org-protocol)
+  :custom
+  (org-roam-completion-everywhere t)
+  (org-roam-directory "/home/mla/Dropbox-Decrypted/org-roam" "home of org roam")
+  (org-roam-dailies-directory "/home/mla/Dropbox-Decrypted/org-roam/daily")
+  (org-roam-capture-templates
+   '(("d" "default" plain
+      "%?"
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         "#+title: ${title}\n")
+      :unnarrowed t)))
+  (org-roam-ref-capture-templates
+   '(("d" "default" plain (function org-roam--capture-get-point)
+      "%?"
+      :file-name "${slug}"
+      :head "#+TITLE: ${title}\n"
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                            "#+title: ${title}\n")
-        :unarrowed t))
-       '(("r" "ref" plain (function org-roam-capture--get-point)
-          "%?"
-          :file-name "websites/${slug}"
-          :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                             "#+title: ${title}\n")
-          :head "#+TITLE: ${title}
+      :unarrowed t))
+   '(("r" "ref" plain (function org-roam-capture--get-point)
+      "%?"
+      :file-name "websites/${slug}"
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         "#+title: ${title}\n")
+      :head "#+TITLE: ${title}
 #+ROAM_KEY: ${ref}
 - source :: ${ref}"
-          :unnarrowed t)))
-      :bind (:map org-roam-mode-map
-              (("C-c n l" . org-roam)
-               ("C-c n f" . org-roam-find-file)
-               ("C-c n g" . org-roam-graph))
-              :map org-mode-map
-              ("C-c n i" . org-roam-insert)
-              ("C-c n I" . org-roam-insert-immediate)))
-
+          :unnarrowedwed t)))
+  :bind
+  (("C-c n l" . org-roam-buffer-toggle)
+   ("C-c n f" . org-roam-node-find)
+   ("C-c n i" . org-roam-node-insert)
+   :map org-mode-map
+   ("C-M-i" . completion-at-point))
+  :config
+  (org-roam-setup))
 
 (use-package org-journal
       :bind
