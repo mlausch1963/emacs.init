@@ -33,6 +33,7 @@
 (defvar use-vertico-p t)
 (defvar use-consult-p t)
 (defvar use-orderless-p t)
+(defvar use-rtags-p nil)
 
 (when (version< emacs-version "25.1")
   (error "Mla requires GNU Emacs 25.1 or newer, but you're running %s" emacs-version))
@@ -701,11 +702,22 @@ parses its input."
         :config
         :after (helm projectile)
         (helm-projectile-on))
+
       (use-package helm-lsp
         :ensure t
         :after (helm
-        :commands helm-lsp-workspace-symbol)
-      )))
+                :commands helm-lsp-workspace-symbol))
+
+      (use-package flyspell-correct-helm
+        :ensure t
+        :demand t
+        :bind ("C-M-;" . flyspell-correct-wrapper)
+        :init (setq flyspell-correct-interface #'flyspell-correct-helm))
+
+      (use-package helm-org
+        :ensure t)
+
+      ))
 
 (use-package projectile
   :ensure t
@@ -831,38 +843,42 @@ parses its input."
 (add-hook 'c-mode-hook 'lsp)
 (add-hook 'c-mode-common-hook #'ws-no-tabs-highlight)
 
-;; (use-package rtags
-;;   :ensure t
-;;   :init
-;;   (add-hook 'c-mode-common-hook  #'rtags-start-process-unless-running)
-;;   :demand
-;;   :bind
-;;   (:map c-mode-map
-;;         ("M-." . rtags-find-symbol-at-point)
-;;         ("S-." . rtags-find-references-at-point)
-;;         ("M-," . rtags-location-stack-back))
+(if use-rtags-p
+    (progn
+      (use-package rtags
+        :ensure t
+        :init
+        (add-hook 'c-mode-common-hook  #'rtags-start-process-unless-running)
+        :demand
+        :bind
+        (:map c-mode-map
+              ("M-." . rtags-find-symbol-at-point)
+              ("S-." . rtags-find-references-at-point)
+              ("M-," . rtags-location-stack-back))
 
-;;   :config
-;;   (progn
-;;     (rtags-enable-standard-keybindings nil "C-c R")
-;;     (setq rtags-autostart-diagnostics t)
-;;     (rtags-diagnostics)
-;;     (setq rtags-completions-enabled t)))
+        :config
+        (progn
+          (rtags-enable-standard-keybindings nil "C-c R")
+          (setq rtags-autostart-diagnostics t)
+          (rtags-diagnostics)
+          (setq rtags-completions-enabled t)))
 
 
-;; (use-package company-rtags
-;;   :config
-;;   (push 'company-rtags company-backends))
+      (use-package company-rtags
+        :config
+        (push 'company-rtags company-backends))
 
-;; (use-package helm-rtags
-;;   :ensure t
-;;   :init
-;;   (setq rtags-use-helm t)
+      (if use-helm-p
+          (use-package helm-rtags
+            :ensure t
+            :init
+            (setq rtags-use-helm t)
+            :config
+            (setq rtags-display-result-backend 'helm)))
 
-;;   :config
-;;   (setq rtags-display-result-backend 'helm))
-
-;; (use-package flycheck-rtags)
+      (use-package flycheck-rtags
+        :ensure t)
+      ))
 
 (defun lsp-go-install-save-hooks ()
   (add-hook 'before-save-hook #'lsp-format-buffer t t)
@@ -893,11 +909,6 @@ parses its input."
   :init (global-flycheck-mode))
 
 
-(use-package flyspell-correct-helm
-  :ensure t
-  :demand t
-  :bind ("C-M-;" . flyspell-correct-wrapper)
-  :init (setq flyspell-correct-interface #'flyspell-correct-helm))
 
 (use-package python
   :ensure t
@@ -989,34 +1000,29 @@ parses its input."
   (require 'dap-cpptools)
   (require 'dap-lldb)
   (require 'dap-gdb-lldb)
-  (dap-gdb-lldb-setup)
+  (dap-ui-mode 1)
+  (dap-tooltip-mode 1)
+  (dap-ui-controls-mode 1)
+
   (dap-register-debug-template
-    "Rust::GDB Run Configuratrion"
-    (list :type "gdb"
-	  :request "launch"
-	  :name "GDB::Run"
-	  :gdbpath "rust-gdb"
-	  :target nil
-	  :cwd nil))
+   "Rust::GDB Run Configuratrion"
+   (list :type "gdb"
+         :request "launch"
+         :name "GDB::Run"
+         :gdbpath "rust-gdb"
+         :target nil
+         :cwd nil))
   (dap-register-debug-template
    "Rust::LLDB Run Configuration"
-     (list :type "lldb"
-           :request "launch"
-           :name "LLDB::Run"
-	   :gdbpath "rust-lldb"
-           ;; uncomment if lldb-mi is not in PATH
-           ;; :lldbmipath "path/to/lldb-mi"
-           ))
+   (list :type "lldb"
+         :request "launch"
+         :name "LLDB::Run"
+         :gdbpath "rust-lldb"
+         ;; uncomment if lldb-mi is not in PATH
+         ;; :lldbmipath "path/to/lldb-mi"
+         ))
   :hook
   (dap-stopped . (lambda (arg) called-interactively #'dap-hydra)))
-
-(use-package dap-ui
-  :ensure nil
-  :after dap-mode
-  :config
-  (dap-ui-controls-mode 1)
-  (dap-ui-mode 1))
-
 
 (use-package gud
   :ensure t)
@@ -1249,8 +1255,6 @@ parses its input."
       (org-journal-date-format "%A, %d %B %Y"))
     (setq org-journal-enable-agenda-integration t)
 
-(use-package helm-org
-  :ensure t)
 
 (use-package editorconfig
   :ensure t
