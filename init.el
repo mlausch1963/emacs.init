@@ -158,6 +158,9 @@
 (column-number-mode t)
 (size-indication-mode t)
 
+(use-package all-the-icons
+  :ensure t)
+
 (use-package doom-modeline
   :ensure t
   :init (doom-modeline-mode 1))
@@ -556,7 +559,7 @@
         )
       (use-package embark
         :ensure t
-
+        :after projectile
         :bind
         (("C-." . embark-act)         ;; pick some comfortable binding
          ("C-;" . embark-dwim)        ;; good alternative: M-.
@@ -570,7 +573,7 @@
         :config
 
         ;; Hide the mode line of the Embark live/completions buffers
-        (add-to-list 'display-buffer-projectilealist
+        (add-to-list 'display-buffer-projectile-alist
                      '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
                        nil
                        (window-parameters (mode-line-format . none)))))
