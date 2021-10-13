@@ -589,10 +589,6 @@
 
 (if use-orderless-p
     (progn
-      (use-package orderless
-        :ensure t
-        :custom
-        completion-styles '(orderless))
 
       (defun flex-if-twiddle (pattern _index _total)
         (when (string-suffix-p "~" pattern)
@@ -601,8 +597,8 @@
       ;; Maybe use this:
       (defun mla/orderless-initialism-dispatcher (pattern _index _total)
         "Leading initialism  dispatcher using the comma suffix.
-It matches PATTERN _INDEX and _TOTAL according to how Orderless
-parses its input."
+         It matches PATTERN _INDEX and _TOTAL according to how Orderless
+         parses its input."
         (when (string-suffix-p "," pattern)
           `(orderless-strict-leading-initialism . ,(substring pattern 0 -1))))
 
@@ -617,10 +613,18 @@ parses its input."
          ((string-prefix-p "!" pattern)
           `(orderless-without-literal . ,(substring pattern 1)))))
 
-      (setq orderless-matching-styles '(orderless-regexp)
-            orderless-style-dispatchers '(mla/orderless-initialism-dispatcher ; first-initialism
-                                          flex-if-twiddle
-                                          without-if-bang))))
+
+
+      (use-package orderless
+        :ensure t
+        :custom
+        completion-styles '(orderless)
+        :init
+        (setq completion-categories-overrides '((file (styles . (partial-completion))))
+              orderless-matching-styles '(orderless-regexp)
+              orderless-style-dispatchers '(mla/orderless-initialism-dispatcher ; first-initialism
+                                            flex-if-twiddle
+                                            without-if-bang)))))
 
 
 (if use-helm-p
@@ -1410,3 +1414,48 @@ parses its input."
 (use-package swiper
   :ensure t
   :bind (("C-s" . swiper)))
+
+
+
+(use-package bufler
+  :ensure t
+  :bind (("C-M-j" . bufler-switch-buffer)
+         ("C-M-k" . bufler-workspace-frame-set))
+  :config
+  (setf bufler-groups
+        (bufler-defgroups
+          ;; Subgroup collecting all named workspaces.
+          (group (auto-workspace))
+          ;; Subgroup collecting buffers in a projectile project.
+          (group (auto-projectile))
+          ;; Grouping browser windows
+          (group
+           (group-or "Browsers"
+                     (name-match "Vimb" (rx bos "vimb"))
+                     (name-match "Qutebrowser" (rx bos "Qutebrowser"))
+                     (name-match "Chromium" (rx bos "Chromium"))))
+          (group
+           (group-or "Chat"
+                     (mode-match "Telega" (rx bos "telega-"))))
+          (group
+           ;; Subgroup collecting all `help-mode' and `info-mode' buffers.
+           (group-or "Help/Info"
+                     (mode-match "*Help*" (rx bos (or "help-" "helpful-")))
+                     ;; (mode-match "*Helpful*" (rx bos "helpful-"))
+                     (mode-match "*Info*" (rx bos "info-"))))
+          (group
+           ;; Subgroup collecting all special buffers (i.e. ones that are not
+           ;; file-backed), except `magit-status-mode' buffers (which are allowed to fall
+           ;; through to other groups, so they end up grouped with their project buffers).
+           (group-and "*Special*"
+                      (name-match "**Special**"
+                                  (rx bos "*" (or "Messages" "Warnings" "scratch" "Backtrace" "Pinentry") "*"))
+                      (lambda (buffer)
+                        (unless (or (funcall (mode-match "Magit" (rx bos "magit-status"))
+                                             buffer)
+                                    (funcall (mode-match "Dired" (rx bos "dired"))
+                                             buffer)
+                                    (funcall (auto-file) buffer))
+                          "*Special*"))))
+          ;; Group remaining buffers by major mode.
+          (auto-mode))))
