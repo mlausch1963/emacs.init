@@ -1462,3 +1462,6 @@
                           "*Special*"))))
           ;; Group remaining buffers by major mode.
           (auto-mode))))
+
+(use-package consult-projectile
+  :ensure t)
