@@ -1041,6 +1041,8 @@
   :ensure t
   :diminish
   :config
+  (setq beacon-blink-duration 1.0
+        beacon-color "aquamarine")
   (beacon-mode 1))
 
 (use-package company
