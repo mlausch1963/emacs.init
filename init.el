@@ -1412,8 +1412,8 @@
 
 (use-package adoc-mode
   :ensure t
-  :mode (("\\.adoc\\'" . adoc-mode)
-         ("\\.txt\\'" . adoc-mode)))
+  :mode (("\\.adoc\\'" . adoc-mode)))
+
 
 
 (use-package swiper
@@ -1466,4 +1466,8 @@
           (auto-mode))))
 
 (use-package consult-projectile
+  :ensure t)
+
+
+(use-package vterm
   :ensure t)
