@@ -110,6 +110,11 @@
 ;; warn when opening files bigger than 100MB
 (setq large-file-warning-threshold 100000000)
 
+(eval-after-load 'smerge-mode
+  (lambda ()
+    (define-key smerge-mode-map (kbd "C-c v") smerge-basic-map)
+    (define-key smerge-mode-map (kbd "C-c C-v") smerge-basic-map)))
+
 (require 'package)
 (add-to-list 'package-archives '("gnu". "https://elpa.gnu.org/packages/"))
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
@@ -954,6 +959,8 @@
          (terraform-mode . lsp)
          (typescript-mode . lsp)
          (ruby-mode . lsp)
+         (js-mode . lsp)
+         (typescript-mode . lsp)
          (python-mode . (lambda ()
                           (require 'lsp-pylsp)
                           (lsp)))
