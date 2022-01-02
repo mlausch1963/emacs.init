@@ -112,8 +112,8 @@
 
 (eval-after-load 'smerge-mode
   (lambda ()
-    (define-key smerge-mode-map (kbd "C-c v") smerge-basic-map)
-    (define-key smerge-mode-map (kbd "C-c C-v") smerge-basic-map)))
+    (keymap-set smerge-mode-map "C-c v" smerge-basic-map)
+    (keymap-set smerge-mode-map "C-c C-v" smerge-basic-map)))
 
 (require 'package)
 (add-to-list 'package-archives '("gnu". "https://elpa.gnu.org/packages/"))
@@ -162,6 +162,7 @@
 (line-number-mode t)
 (column-number-mode t)
 (size-indication-mode t)
+(window-divider-mode t)
 
 (use-package all-the-icons
   :ensure t)
@@ -211,17 +212,17 @@
 (set-keyboard-coding-system 'utf-8)
 
 
-(global-set-key (kbd "C-z") #'undo)
-(global-set-key (kbd "C-x C-b") #'ibuffer)
+(keymap-global-set "C-z" #'undo)
+(keymap-global-set "C-x C-b" #'ibuffer)
 
 ;; align code in a pretty way
-(global-set-key (kbd "C-x \\") #'align-regexp)
+(keymap-global-set "C-x \\" #'align-regexp)
 
 ;; misc useful keybindings
-(global-set-key (kbd "s-<") #'beginning-of-buffer)
-(global-set-key (kbd "s->") #'end-of-buffer)
-(global-set-key (kbd "s-q") #'fill-paragraph)
-(global-set-key (kbd "s-x") #'execute-extended-command)
+(keymap-global-set "s-<" #'beginning-of-buffer)
+(keymap-global-set "s->" #'end-of-buffer)
+(keymap-global-set "s-q" #'fill-paragraph)
+(keymap-global-set "s-x" #'execute-extended-command)
 
                                         ; smart tab behavior - indent or complete
 (setq tab-always-indent 'complete)
@@ -362,8 +363,8 @@
   :config
   (add-hook 'emacs-lisp-mode-hook #'eldoc-mode)
   (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
-   (define-key emacs-lisp-mode-map (kbd "C-c C-c") #'eval-defun)
-  (define-key emacs-lisp-mode-map (kbd "C-c C-b") #'eval-buffer)
+   (keymap-set emacs-lisp-mode-map (kbd "C-c C-c") #'eval-defun)
+  (keymap-set emacs-lisp-mode-map (kbd "C-c C-b") #'eval-buffer)
   (add-hook 'lisp-interaction-mode-hook #'eldoc-mode)
   (add-hook 'eval-expression-minibuffer-setup-hook #'eldoc-mode))
 
@@ -960,6 +961,7 @@
          (typescript-mode . lsp)
          (ruby-mode . lsp)
          (js-mode . lsp)
+         (javascript-mode . lsp)
          (yaml-mode . lsp)
          (typescript-mode . lsp)
          (web-mode . lsp)
@@ -996,8 +998,8 @@
         lsp-ui-peek-list-width 60
         lsp-ui-peek-peek-height 25)
   (require 'lsp-ui-peek)
-  (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
-  (define-key lsp-ui-mode-map (kbd "s-.") #'lsp-ui-peek-find-references)
+  (keymap-set lsp-ui-mode-map "<remap> <xref-find-definitions>" #'lsp-ui-peek-find-definitions)
+  (keymap-set lsp-ui-mode-map "s-." #'lsp-ui-peek-find-references)
   (require 'lsp-ui-doc)
   :commands lsp-ui-mode)
 
@@ -1068,7 +1070,7 @@
   :defer t
   :init
   (with-eval-after-load 'winum
-    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+    (keymap-set winum-keymap (kbd "M-0") #'treemacs-select-window))
   :config
   (progn
     (setq treemacs-collapse-dirs                 (if (treemacs--find-python3) 3 0)
