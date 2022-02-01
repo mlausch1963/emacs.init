@@ -52,14 +52,20 @@
   `(when (eq system-type ',type)
      ,@body))
 
-(with-system darwin
-             (setenv "PATH" (concat "/usr/local/bin"
-                                    ":"
-                                    (getenv "GOPATH") "/bin"
-                                    ":"
-                                    (getenv "PATH")))
-             (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.2"))
+(when (version< emacs-version "29.0")
+  (defmacro keymap-global-set (key-chord action)
+    `(global-set-key (kbd ,key-chord) ,action)))
 
+(when (version< emacs-version "29.0")
+  (defmacro keymap-set (key-map key-chord action)
+    `(define-key ,key-map (kbd ,key-chord) ,action)))
+
+(with-system darwin
+  ;;; I prefer cmd key for meta
+  (setq mac-option-key-is-meta nil
+        mac-command-key-is-meta t
+        mac-command-modifier 'meta
+        mac-option-modifier 'super))
 
 ;; Always load newest byte code
 (setq load-prefer-newer t)
@@ -116,16 +122,24 @@
     (keymap-set smerge-mode-map "C-c C-v" smerge-basic-map)))
 
 (require 'package)
-(add-to-list 'package-archives '("gnu". "https://elpa.gnu.org/packages/"))
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(package-initialize)
+
+(setq package-archives
+      '(("GNU ELPA"     . "https://elpa.gnu.org/packages/")
+        ("MELPA Stable" . "https://stable.melpa.org/packages/")
+        ("MELPA"        . "https://melpa.org/packages/")
+        ("org"          . "https://orgmode.org/elpa/"))
+      package-archive-priorities
+      '(("MELPA Stable" . 10)
+        ("GNU ELPA"     . 5)
+        ("org"          . 5)
+        ("MELPA"        . 20)
+        ))
 
 ;; keep the installed packages in .emacs.d
 (setq package-user-dir (expand-file-name "elpa" user-emacs-directory))
 
-
-(package-initialize)
-;; update the package metadata is the local cache is missing
-
+;; update the package metadata if the local cache is missing
 (unless package-archive-contents
   (package-refresh-contents))
 
@@ -203,6 +217,7 @@
 (setq auto-save-file-name-transforms
       `((".*" ,temporary-file-directory t)))
 
+
 ;; revert buffers automatically when underlying files are changed externally
 (global-auto-revert-mode t)
 
@@ -210,6 +225,7 @@
 (set-default-coding-systems 'utf-8)
 (set-terminal-coding-system 'utf-8)
 (set-keyboard-coding-system 'utf-8)
+
 
 
 (keymap-global-set "C-z" #'undo)
@@ -363,8 +379,8 @@
   :config
   (add-hook 'emacs-lisp-mode-hook #'eldoc-mode)
   (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
-   (keymap-set emacs-lisp-mode-map (kbd "C-c C-c") #'eval-defun)
-  (keymap-set emacs-lisp-mode-map (kbd "C-c C-b") #'eval-buffer)
+  (keymap-set emacs-lisp-mode-map "C-c C-c" #'eval-defun)
+  (keymap-set emacs-lisp-mode-map "C-c C-b" #'eval-buffer)
   (add-hook 'lisp-interaction-mode-hook #'eldoc-mode)
   (add-hook 'eval-expression-minibuffer-setup-hook #'eldoc-mode))
 
@@ -638,6 +654,7 @@
 
 (if use-helm-p
     (progn
+      (/ 1 0)
       (use-package helm
         :ensure t
         :diminish helm-mode
@@ -933,7 +950,7 @@
   :defer t
   :diminish
   :config
-  (setenv "WORKON_HOME" "/home/mla/python-envs")
+  (setenv "WORKON_HOME" "~/.virtualenvs")
   (add-hook 'pyython-mode-hook  #'pyvenv-tracking-mode)
   (add-hook 'python-mode-hook #'pyvenv-mode))
 
@@ -1220,7 +1237,7 @@
 (use-package org
   :ensure t
   :config
-  (setq org-agenda-files (quote ("/home/mla/Dropbox-Decrypted/org")))
+  (setq org-agenda-files (quote ("~/Dropbox-Decrypted/org")))
   )
 
 (use-package org-roam
@@ -1231,8 +1248,8 @@
   (require 'org-protocol)
   :custom
   (org-roam-completion-everywhere t)
-  (org-roam-directory "/home/mla/Dropbox-Decrypted/org-roam" "home of org roam")
-  (org-roam-dailies-directory "/home/mla/Dropbox-Decrypted/org-roam/daily")
+  (org-roam-directory "~/Dropbox-Decrypted/org-roam" "home of org roam")
+  (org-roam-dailies-directory "~/Dropbox-Decrypted/org-roam/daily")
   (org-roam-capture-templates
    '(("d" "default" plain
       "%?"
@@ -1266,14 +1283,16 @@
   (org-roam-setup))
 
 (use-package org-journal
-      :bind
-      ("C-c n j" . org-journal-new-entry)
-      :custom
-      (org-journal-dir "~/Dropbox-Decrypted/org-roam")
-      (org-journal-date-prefix "#+TITLE: ")
-      (org-journal-file-format "%Y-%m-%d.org")
-      (org-journal-date-format "%A, %d %B %Y"))
-    (setq org-journal-enable-agenda-integration t)
+  :ensure t
+  :bind
+  ("C-c n j" . org-journal-new-entry)
+  :custom
+  (org-journal-dir "~/Dropbox-Decrypted/org-roam")
+  (org-journal-date-prefix "#+TITLE: ")
+  (org-journal-file-format "%Y-%m-%d.org")
+  (org-journal-date-format "%A, %d %B %Y"))
+
+(setq org-journal-enable-agenda-integration t)
 
 
 (use-package editorconfig
@@ -1480,8 +1499,11 @@
   :ensure t)
 
 
-(use-package vterm
-  :ensure t)
+
+(with-system gnu/linux
+  (use-package vterm
+    :ensure t))
+
 
 (use-package web-mode
   :ensure t
