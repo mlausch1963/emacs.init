@@ -991,6 +991,8 @@
 
 
 
+
+
 (defun mla/on-venv-change-restart-pyls ()
   (let ((venv (lsp-session-get-metadata :venv)))
     (message "pyvenv post hook: lsp env %s, my env %s" venv (getenv "VIRTUAL_ENV"))
@@ -1244,7 +1246,6 @@
 
 (use-package org-pomodoro
   :ensure t)
->>>>>>> Stashed changes
 
 (use-package org-roam
   :ensure t
@@ -1450,13 +1451,9 @@
   :ensure t
   :mode (("\\.adoc\\'" . adoc-mode)))
 
-
-
 (use-package swiper
   :ensure t
   :bind (("C-s" . swiper)))
-
-
 
 (use-package bufler
   :ensure t
@@ -1504,12 +1501,9 @@
 (use-package consult-projectile
   :ensure t)
 
-
-
 (with-system gnu/linux
   (use-package vterm
     :ensure t))
-
 
 (use-package web-mode
   :ensure t
