@@ -122,7 +122,6 @@
     (keymap-set smerge-mode-map "C-c C-v" smerge-basic-map)))
 
 (require 'package)
-(package-initialize)
 
 (setq package-archives
       '(("GNU ELPA"     . "https://elpa.gnu.org/packages/")
@@ -135,6 +134,8 @@
         ("org"          . 5)
         ("MELPA"        . 20)
         ))
+
+(package-initialize)
 
 ;; keep the installed packages in .emacs.d
 (setq package-user-dir (expand-file-name "elpa" user-emacs-directory))
