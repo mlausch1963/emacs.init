@@ -1523,3 +1523,20 @@
         web-mode-enable-comment-keywords t
         web-mode-enable-current-element-highlight t
         ))
+
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-tramp-connection '("ts-js-langserver"
+                                                          "--stdio"))
+                  :activation-fn 'lsp-typescript-javascript-tsx-jsx-activate-p
+                  :priority -2
+                  :completion-in-comments? t
+                  :initialization-options (lambda ()
+                                            (list :plugins lsp-clients-typescript-plugins
+                                                  :logVerbosity lsp-clients-typescript-log-verbosity
+                                                  :tsServerPath (lsp-package-path 'typescript)
+                                                  :preferences lsp-clients-typescript-init-opts))
+                  :ignore-messages '("readFile .*? requested by TypeScript but content not available")
+                  :server-id 'remote-ts-ls
+                  :remote? t
+                  :request-handlers (ht ("_typescript.rename" #'lsp-javascript--rename))))
