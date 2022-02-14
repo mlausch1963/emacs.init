@@ -1236,9 +1236,15 @@
 
 (use-package org
   :ensure t
+  :bind
+  ("C-c a". org-agenda)
   :config
-  (setq org-agenda-files (quote ("~/Dropbox-Decrypted/org")))
-  )
+  (setq org-agenda-files (list "~/Dropbox-Decrypted/org/home.org"
+                               "~/Dropbox-Decrypted/org/work.org")))
+
+(use-package org-pomodoro
+  :ensure t)
+>>>>>>> Stashed changes
 
 (use-package org-roam
   :ensure t
