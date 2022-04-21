@@ -1424,9 +1424,8 @@
 
 (use-package perspective
   :ensure t
-  :bind (("C-x b" . persp-switch-to-buffer*)
-         ("C-x k" . persp-kill-buffer*))
   :custom
+  (persp-mode-prefix-key (kbd "C-s-p"))
   (persp-state-default-file (expand-file-name "perspectives.el" mla-personal-dir))
   :init (persp-mode)
   :hook (kill-emacs . persp-state-save))
