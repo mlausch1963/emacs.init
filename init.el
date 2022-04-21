@@ -1,4 +1,4 @@
-;; init.el --- Prelude's configuration entry point.
+; init.el --- Prelude's configuration entry point.
 ;;
 ;; Copyright (c) 2019 Michael Lausch
 ;;
@@ -60,6 +60,12 @@
   (defmacro keymap-set (key-map key-chord action)
     `(define-key ,key-map (kbd ,key-chord) ,action)))
 
+(when (not (version< emacs-version "29.0"))
+  (progn
+    (pixel-scroll-precision-mode)))
+
+
+
 (with-system darwin
   ;;; I prefer cmd key for meta
   (setq mac-option-key-is-meta nil
@@ -72,8 +78,10 @@
 
 (defvar mla-dir (file-name-directory load-file-name)
   "The root dir of the Emacs Mla distribution.")
+
 (defvar mla-core-dir (expand-file-name "core" mla-dir)
   "The home of Mla's core functionality.")
+
 (defvar mla-modules-dir (expand-file-name  "modules" mla-dir)
   "This directory houses all of the built-in Mla modules.")
 
@@ -184,7 +192,8 @@
 
 (use-package doom-modeline
   :ensure t
-  :init (doom-modeline-mode 1))
+  :hook
+  (after-init . doom-modeline-mode))
 
 ;; enable y/n answers
 (fset 'yes-or-no-p 'y-or-n-p)
@@ -1063,7 +1072,7 @@
          ;; :lldbmipath "path/to/lldb-mi"
          ))
   :hook
-  (dap-stopped . (lambda (arg) called-interactively #'dap-hydra)))
+  (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
 
 (use-package gud
   :ensure t)
@@ -1292,6 +1301,18 @@
    ("C-M-i" . completion-at-point))
   :config
   (org-roam-setup))
+
+(use-package consult-org-roam
+  :ensure t
+  :init
+  (require 'consult-org-roam)
+  (consult-org-roam-mode 1)
+  :custom
+  (consult-org-roam-grep-func #'consult-igrep)
+  :bind
+  ("C-c n e" . consult-org-roam-file-find)
+  ("C-c n b" . consult-org-roam-backlinks)
+  ("C-c n r" . consult-org-roam-search))
 
 (use-package org-journal
   :ensure t
@@ -1527,6 +1548,13 @@
         ))
 
 
+(use-package treemacs-tab-bar
+  :ensure t)
+
+(use-package org-modern
+  :ensure t
+  :hook (org-mode-hook . org-modern-mode))
+
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-tramp-connection '("ts-js-langserver"
                                                           "--stdio"))
@@ -1542,3 +1570,22 @@
                   :server-id 'remote-ts-ls
                   :remote? t
                   :request-handlers (ht ("_typescript.rename" #'lsp-javascript--rename))))
+
+;; make sure '--stdio' is part of lsp-go-gopls-server-args
+;; and return a modified list
+
+(defun _fixup-gopls-server-args ()
+  (if (not (member "--stdio" lsp-go-gopls-server-args))
+      (append lsp-go-gopls-server-args '("--stdio"))))
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-tramp-connection
+                                   (lambda () (cons lsp-go-gopls-server-path (_fixup-gopls-server-args))))
+                  :major-modes '(go-mode go-dot-mode)
+                  :language-id "go"
+                  :priority -2
+                  :completion-in-comments? t
+                  :server-id 'remote-gopls-lsp
+                  :remote? t
+                  :after-open-fn (lambda ()
+                                   (setq-local lsp-completion-filter-on-incomplete nil))))
