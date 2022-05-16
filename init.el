@@ -418,9 +418,7 @@
 
 (use-package forge
   :ensure t
-  :after magit
-  :config
-  (add-to-list 'forge-alist '("gitlab.advertima.com:2222" "gitlab.advertima.com/api/v4" "gitlab.advertima.com" forge-gitlab-repository)))
+  :after magit)
 
 (use-package salt-mode
   :ensure t
@@ -1300,7 +1298,7 @@
    :map org-mode-map
    ("C-M-i" . completion-at-point))
   :config
-  (org-roam-setup))
+  (org-roam-db-autosync-enable))
 
 (use-package consult-org-roam
   :ensure t
@@ -1554,6 +1552,11 @@
 (use-package org-modern
   :ensure t
   :hook (org-mode-hook . org-modern-mode))
+
+(use-package gh-md
+  :ensure t
+  )
+
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-tramp-connection '("ts-js-langserver"
