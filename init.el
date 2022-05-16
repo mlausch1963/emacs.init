@@ -654,7 +654,7 @@
         :custom
         completion-styles '(orderless)
         :init
-        (setq completion-categories-overrides '((file (styles . (partial-completion))))
+        (setq completion-category-overrides '((file (styles . (partial-completion))))
               orderless-matching-styles '(orderless-regexp)
               orderless-style-dispatchers '(mla/orderless-initialism-dispatcher ; first-initialism
                                             flex-if-twiddle
