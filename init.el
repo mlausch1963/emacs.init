@@ -430,6 +430,21 @@
 
 (if use-vertico-p
     (progn
+
+
+      ;; Workaround for problem with `tramp' hostname completions. This overrides
+      ;; the completion style specifically for remote files! See
+      ;; https://github.com/minad/vertico#tramp-hostname-completion
+      (defun kb/basic-remote-try-completion (string table pred point)
+        (and (vertico--remote-p string)
+             (completion-basic-try-completion string table pred point)))
+      (defun kb/basic-remote-all-completions (string table pred point)
+        (and (vertico--remote-p string)
+             (completion-basic-all-completions string table pred point)))
+      (add-to-list 'completion-styles-alist
+                   '(basic-remote           ; Name of `completion-style'
+                     kb/basic-remote-try-completion kb/basic-remote-all-completions nil))
+
       (use-package vertico
         :ensure t
         :bind
@@ -648,17 +663,69 @@
           `(orderless-without-literal . ,(substring pattern 1)))))
 
 
+      (defun mla/orderless--strict-*-initialism (component &optional anchored)
+        "Match a COMPONENT as a strict initialism, optionally ANCHORED.
+         The characters in COMPONENT must occur in the candidate in that
+         order at the beginning of subsequent words comprised of letters.
+         Only non-letters can be in between the words that start with the
+         initials.
+
+         If ANCHORED is `start' require that the first initial appear in
+         the first word of the candidate.  If ANCHORED is `both' require
+         that the first and last initials appear in the first and last
+         words of the candidate, respectively."
+        (orderless--separated-by
+            '(seq (zero-or-more alpha) word-end (zero-or-more (not alpha)))
+          (cl-loop for char across component collect `(seq word-start ,char))
+          (when anchored '(seq (group buffer-start) (zero-or-more (not alpha))))
+          (when (eq anchored 'both)
+            '(seq (zero-or-more alpha) word-end (zero-or-more (not alpha)) eol))))
+
+
+      (defun mla/orderless-strict-initialism (component)
+        "Match a COMPONENT as a strict initialism.
+         This means the characters in COMPONENT must occur in the
+         candidate in that order at the beginning of subsequent words
+         comprised of letters.  Only non-letters can be in between the
+         words that start with the initials."
+        (mla/orderless--strict-*-initialism component))
+
+
+      (defun mla/orderless-literal-dispatcher (pattern _index _total)
+        "Literal style dispatcher using the equals sign as a suffix.
+         It matches PATTERN _INDEX and _TOTAL according to how Orderless
+         parses its input."
+        (when (string-suffix-p "=" pattern)
+          `(orderless-literal . ,(substring pattern 0 -1))))
+
+      (defun mla/orderless-strict-initialism-dispatcher (pattern _index _total)
+        "Leading initialism  dispatcher using the comma suffix.
+         It matches PATTERN _INDEX and _TOTAL according to how Orderless
+         parses its input."
+        (when (string-suffix-p "," pattern)
+          `(mla/orderless-strict-initialism . ,(substring pattern 0 -1))))
+
+
+      (defun mla/orderless-flex-dispatcher (pattern _index _total)
+        "Flex  dispatcher using the tilde suffix.
+         It matches PATTERN _INDEX and _TOTAL according to how Orderless
+         parses its input."
+        (when (string-suffix-p "." pattern)
+          `(orderless-flex . ,(substring pattern 0 -1))))
 
       (use-package orderless
         :ensure t
         :custom
         completion-styles '(orderless)
         :init
-        (setq completion-category-overrides '((file (styles . (partial-completion))))
-              orderless-matching-styles '(orderless-regexp)
-              orderless-style-dispatchers '(mla/orderless-initialism-dispatcher ; first-initialism
-                                            flex-if-twiddle
-                                            without-if-bang)))))
+        (setq completion-category-overrides '((file (styles basic-remote orderless)))
+              orderless-matching-styles '(orderless-literal
+                                          orderless-prefixes
+                                          orderless-initialism
+                                          orderless-regexp)
+              orderless-style-dispatchers '(mla/orderless-literal-dispatcher
+                                            mla/orderless-strict-initialism-dispatcher
+                                            mla/orderless-flex-dispatcher)))))
 
 
 (if use-helm-p
