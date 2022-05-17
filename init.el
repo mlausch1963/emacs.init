@@ -456,6 +456,7 @@
               ("M-h" . backward-kill-word))
         :init
         (vertico-mode))
+
       (use-package marginalia
         :after vertico
         :ensure t
