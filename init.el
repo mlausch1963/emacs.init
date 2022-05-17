@@ -1,4 +1,4 @@
-; init.el --- Prelude's configuration entry point.
+                                        ; init.el --- Prelude's configuration entry point.
 ;;
 ;; Copyright (c) 2019 Michael Lausch
 ;;
@@ -99,13 +99,13 @@
   (make-directory mla-savefile-dir))
 
 (defun mla-add-subfolders-to-load-path (parent-dir)
- "Add all level PARENT-DIR subdirs to the `load-path'."
- (dolist (f (directory-files parent-dir))
-   (let ((name (expand-file-name f parent-dir)))
-     (when (and (file-directory-p name)
-                (not (string-prefix-p "." f)))
-       (add-to-list 'load-path name)
-       (mla-add-subfolders-to-load-path name)))))
+  "Add all level PARENT-DIR subdirs to the `load-path'."
+  (dolist (f (directory-files parent-dir))
+    (let ((name (expand-file-name f parent-dir)))
+      (when (and (file-directory-p name)
+                 (not (string-prefix-p "." f)))
+        (add-to-list 'load-path name)
+        (mla-add-subfolders-to-load-path name)))))
 
 ;; add Mla's directories to Emacs's `load-path'
 (add-to-list 'load-path mla-core-dir)
@@ -114,7 +114,7 @@
 (mla-add-subfolders-to-load-path mla-vendor-dir)
 
 (setq custom-file (expand-file-name "custom.el" mla-personal-dir))
- (load custom-file)
+(load custom-file)
 
 ;; reduce the frequency of garbage collection by making it happen on
 ;; each 50MB of allocated data (the default is on every 0.76MB)
@@ -157,7 +157,7 @@
 
 (require 'bind-key)
 
-; This is only needed once, near the top of the file
+                                        ; This is only needed once, near the top of the file
 (eval-when-compile
   ;; Following line is not needed if use-package.el is in ~/.emacs.d
   (require 'use-package))
@@ -385,7 +385,7 @@
 
 (use-package lisp-mode
   :after
-    (rainbow-delimiter-mode)
+  (rainbow-delimiter-mode)
   :config
   (add-hook 'emacs-lisp-mode-hook #'eldoc-mode)
   (add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
@@ -430,8 +430,6 @@
 
 (if use-vertico-p
     (progn
-
-
       ;; Workaround for problem with `tramp' hostname completions. This overrides
       ;; the completion style specifically for remote files! See
       ;; https://github.com/minad/vertico#tramp-hostname-completion
@@ -445,17 +443,89 @@
                    '(basic-remote           ; Name of `completion-style'
                      kb/basic-remote-try-completion kb/basic-remote-all-completions nil))
 
+
       (use-package vertico
+        :demand t
         :ensure t
         :bind
         (:map vertico-map
-              ("C-j" . vertico-next)
-              ("C-k" . vertico-previous)
-              ("C-f" . vertico-exit)
-              :map minibuffer-local-map
-              ("M-h" . backward-kill-word))
+                  ("<tab>" . #'vertico-insert) ; Set manually otherwise setting `vertico-quick-insert' overrides this
+                  ("<escape>" . #'minibuffer-keyboard-quit)
+                  ("?" . #'minibuffer-completion-help)
+                  ("C-M-n" . #'vertico-next-group)
+                  ("C-M-p" . #'vertico-previous-group)
+                  ;; Multiform toggles
+                  ("<backspace>" . #'vertico-directory-delete-char)
+                  ("C-w" . #'vertico-directory-delete-word)
+                  ("C-<backspace>" . #'vertico-directory-delete-word)
+                  ("RET" . #'vertico-directory-enter)
+                  ("C-i" . #'vertico-quick-insert)
+                  ("C-o" . #'vertico-quick-exit)
+                  ("M-o" . #'kb/vertico-quick-embark)
+                  ("M-G" . #'vertico-multiform-grid)
+                  ("M-F" . #'vertico-multiform-flat)
+                  ("M-R" . #'vertico-multiform-reverse)
+                  ("M-U" . #'vertico-multiform-unobtrusive)
+                  ("C-l" . #'kb/vertico-multiform-flat-toggle)
+                  )
+
+        :hook ((rfn-eshadow-update-overlay . vertico-directory-tidy) ; Clean up file path when typing
+               (minibuffer-setup . vertico-repeat-save) ; Make sure vertico state is saved
+               )
+        :custom
+        (vertico-count 13)
+        (vertico-resize t)
+        (vertico-cycle nil)
+        ;; Extensions
+        (vertico-grid-separator "       ")
+        (vertico-grid-lookahead 50)
+        (vertico-buffer-display-action '(display-buffer-reuse-window))
+        (vertico-multiform-categories
+         '((consult-grep buffer)
+           (consult-location)
+           (imenu buffer)
+           ;(library reverse indexed)
+           (library indexed)
+           ;(org-roam-node reverse indexed)
+           (org-roam-node indexed)
+           ))
+        (vertico-multiform-commands
+         '(("flyspell-correct-*" grid reverse)
+           (org-refile grid reverse indexed)
+           (consult-yank-pop indexed)
+           (consult-flycheck)
+           (consult-lsp-diagnostics)
+           ))
         :init
-        (vertico-mode))
+        (defun kb/vertico-multiform-flat-toggle ()
+          "Toggle between flat and reverse."
+          (interactive)
+          (vertico-multiform--display-toggle 'vertico-flat-mode)
+          (if vertico-flat-mode
+              (vertico-multiform--temporary-mode 'vertico-reverse-mode -1)
+            (vertico-multiform--temporary-mode 'vertico-reverse-mode 1)))
+        (defun kb/vertico-quick-embark (&optional arg)
+          "Embark on candidate using quick keys."
+          (interactive)
+          (when (vertico-quick-jump)
+            (embark-act arg)))
+
+        :config
+        (vertico-mode)
+        ;; Extensions
+        (vertico-multiform-mode)
+
+        ;; Prefix the current candidate with “» ”. From
+        ;; https://github.com/minad/vertico/wiki#prefix-current-candidate-with-arrow
+        (advice-add #'vertico--format-candidate :around
+                    (lambda (orig cand prefix suffix index _start)
+                      (setq cand (funcall orig cand prefix suffix index _start))
+                      (concat
+                       (if (= vertico--index index)
+                           (propertize "» " 'face 'vertico-current)
+                         "  ")
+                       cand)))
+        )
 
       (use-package marginalia
         :after vertico
@@ -487,9 +557,9 @@
         ;; Vertico commands are hidden in normal buffers.
         (setq read-extended-command-predicate
               #'command-completion-default-include-p)
-        ;; Enable recursive minibuffers
-        (setq enable-recursive-minibuffers t))
-      ))
+        ;; Enaable recursive minibuffers
+        (setq enable-recursive-minibuffers 't)
+        )))
 
 (if use-consult-p
     (progn
@@ -599,10 +669,10 @@
         ;; Optionally configure a function which returns the project root directory.
         ;; There are multiple reasonable alternatives to chose from.
   ;;;; 1. project.el (project-roots)
-;;        (setq consult-project-root-function
-  ;;            (lambda ()
-    ;;            (when-let (project (project-current))
-      ;;            (car (project-roots project)))))
+        ;;        (setq consult-project-root-function
+        ;;            (lambda ()
+        ;;            (when-let (project (project-current))
+        ;;            (car (project-roots project)))))
   ;;;; 2. projectile.el (projectile-project-root)
         (autoload 'projectile-project-root "projectile")
         (setq consult-project-root-function #'projectile-project-root)
@@ -1051,7 +1121,7 @@
 
 (use-package lsp-mode
   :ensure t
-;;  :after (pyvenv)
+  ;;  :after (pyvenv)
   :config
   (message "lsp-mode loaded")
   (setq lsp-prefer-flymake nil
@@ -1097,9 +1167,9 @@
   :after flycheck
   :config
   (setq lsp-ui-doc-use-webkit nil
-;        lsp-ui-flycheck-enable t
-;        lsp-ui-flycheck-list-position 'bottom
-;        lsp-ui-flycheck-live-reporting t
+                                        ;        lsp-ui-flycheck-enable t
+                                        ;        lsp-ui-flycheck-list-position 'bottom
+                                        ;        lsp-ui-flycheck-live-reporting t
         lsp-ui-peek-list-width 60
         lsp-ui-peek-peek-height 25)
   (require 'lsp-ui-peek)
@@ -1266,7 +1336,7 @@
               (let ((local-file (concat bookmarkplus-dir arg)))
                 (unless (file-exists-p local-file)
                   (url-copy-file (concat emacswiki-base arg) local-file t))))
-          bookmark-files)
+            bookmark-files)
     (byte-recompile-directory bookmarkplus-dir 0)))
 
 
@@ -1355,7 +1425,7 @@
       :file-name "${slug}"
       :head "#+TITLE: ${title}\n"
       :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                           "#+title: ${title}\n")
+                         "#+title: ${title}\n")
       :unarrowed t))
    '(("r" "ref" plain (function org-roam-capture--get-point)
       "%?"
@@ -1365,7 +1435,7 @@
       :head "#+TITLE: ${title}
 #+ROAM_KEY: ${ref}
 - source :: ${ref}"
-          :unnarrowedwed t)))
+      :unnarrowedwed t)))
   :bind
   (("C-c n l" . org-roam-buffer-toggle)
    ("C-c n f" . org-roam-node-find)
@@ -1409,7 +1479,7 @@
 (use-package spdx
   :ensure t
   :bind (:map prog-mode-map
-         ("C-c i l" . spdx-insert-spdx))
+              ("C-c i l" . spdx-insert-spdx))
   :custom
   (spdx-copyright-holder 'auto)
   (spdx-project-detection 'auto))
@@ -1441,8 +1511,8 @@
   (setq-default goggles-pulse t)) ;; set to nil to disable pulsing
 
 (use-package monkeytype
-   :demand t
-   :ensure t)
+  :demand t
+  :ensure t)
 
 ;; rust development
 (use-package rustic
@@ -1508,7 +1578,7 @@
             (company-complete-common)
           (indent-for-tab-command)))))
 
-; -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+                                        ; -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;; for Cargo.toml and other config files
 
 (use-package toml-mode :ensure)
