@@ -1397,11 +1397,30 @@
   :bind
   ("C-c a". org-agenda)
   :config
-  (setq org-agenda-files (list "~/Dropbox-Decrypted/org/home.org"
-                               "~/Dropbox-Decrypted/org/work.org")))
+  (setq org-agenda-files (list
+                          "~/Dropbox-Decrypted/org/agenda.org"
+                          "~/Dropbox-Decrypted/org/home.org"
+                          "~/Dropbox-Decrypted/org/work.org")))
 
 (use-package org-pomodoro
   :ensure t)
+
+
+(defun org-roam-node-insert-immediate (arg &rest args)
+  (let ((args (cons arg args))
+        (org-roam-capture-templates (list (append org-roam-capture-templates)
+                                          `(:immediate-finish t))))
+    (apply #'org-roam-node-insert args)))
+
+(defun mla/org-roam-filter-by-tag (tag-name)
+  (maopcar #'org-roam-node-file
+           (seq-filter
+            (mla/org-roam-filter-by-tag tag-name)
+            (org-roam-list))))
+
+(defun mla/org-roam-refresh-agenda-list ()
+  (interactive)
+  (setq org-agenda-files))
 
 (use-package org-roam
   :ensure t
@@ -1409,6 +1428,7 @@
   (setq org-roam-v2-ack t)
   (require 'org-roam-protocol)
   (require 'org-protocol)
+  (require 'org-roam-dailies)
   :custom
   (org-roam-completion-everywhere t)
   (org-roam-directory "~/Dropbox-Decrypted/org-roam" "home of org roam")
@@ -1442,6 +1462,8 @@
    ("C-c n i" . org-roam-node-insert)
    :map org-mode-map
    ("C-M-i" . completion-at-point))
+  :bind-keymap
+  ("C-c n d" . org-roam-dailis-map)
   :config
   (org-roam-db-autosync-enable))
 
