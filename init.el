@@ -474,7 +474,7 @@
                )
         :custom
         (vertico-count 13)
-        (vertico-resize t)
+;;        (vertico-resize t)
         (vertico-cycle nil)
         ;; Extensions
         (vertico-grid-separator "       ")
@@ -1288,7 +1288,7 @@
 
     (treemacs-follow-mode t)
     (treemacs-filewatch-mode t)
-    (treemacs-fringe-indicator-mode t)
+    (treemacs-fringe-indicator-mode 'always)
     (pcase (cons (not (null (executable-find "git")))
                  (not (null (treemacs--find-python3))))
       (`(t . t)
@@ -1321,6 +1321,16 @@
 (use-package treemacs-magit
   :after treemacs magit
   :ensure t)
+
+(use-package treemacs-perspective
+  :after (treemacs perspective)
+  :ensure: t
+  :config (treemacs-set-scope-type 'Perspectives))
+
+(use-package treemacs-tab-bar
+  :after (treemacs)
+  :ensure t
+  :config (treemacs-set-scope-type 'Tabs))
 
 (defun mla/download-bookmark+ ()
   "Download the bookmark+ source from the Emacs wiki."
