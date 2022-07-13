@@ -16,3 +16,6 @@
 /org-roam.db
 /org-journal.cache
 /forge-database.sqlite
+/.dap-breakpoints
+/.org-id-locations
+/forge-database-v7-20220624-1836.sql

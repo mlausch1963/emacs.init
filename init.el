@@ -1145,23 +1145,6 @@
          (lsp-mode . lsp-lens-mode))
   :commands (lsp lsp-deferred))
 
-
-
-
-
-(defun mla/on-venv-change-restart-pyls ()
-  (let ((venv (lsp-session-get-metadata :venv)))
-    (message "pyvenv post hook: lsp env %s, my env %s" venv (getenv "VIRTUAL_ENV"))
-    (if (not (eq (getenv "VIRTUAL_ENV") venv))
-        (--when-let (pcase (lsp-workspaces)
-                      (`nil (user-error "There are no active servers in the current buffer"))
-                      (`(,workspace) workspace)
-                      (workspaces (lsp--completing-read "VENV Changefd, restaret server: "
-                                                        workspaces
-                                                        'lsp--workspace-print nil t)))
-          (message "pyvenv post hook: restarting pylsp")
-          (lsp-workspace-restart it)))))
-
 (use-package lsp-ui
   :ensure t
   :after flycheck
@@ -1324,13 +1307,8 @@
 
 (use-package treemacs-perspective
   :after (treemacs perspective)
-  :ensure t
-  :init (treemacs-set-scope-type 'Perspectives))
-
-(use-package treemacs-tab-bar
-  :after (treemacs)
-  :ensure t
-  :config (treemacs-set-scope-type 'Tabs))
+  :ensure: t
+  :config (treemacs-set-scope-type 'Perspectives))
 
 (defun mla/download-bookmark+ ()
   "Download the bookmark+ source from the Emacs wiki."
@@ -1723,9 +1701,6 @@
         ))
 
 
-(use-package treemacs-tab-bar
-  :ensure t)
-
 (use-package org-modern
   :ensure t
   :hook (org-mode-hook . org-modern-mode))
@@ -1733,6 +1708,26 @@
 (use-package gh-md
   :ensure t
   )
+
+
+(use-package tree-sitter
+  :ensure t
+  :config
+  ;; activate tree-sitter on any buffer containing code for which it has a parser available
+  (global-tree-sitter-mode)
+  ;; you can easily see the difference tree-sitter-hl-mode makes for python, ts or tsx
+  ;; by switching on and off
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+
+(use-package tree-sitter-langs
+  :ensure t
+  :after tree-sitter)
+
+(use-package tree-sitter-indent
+  :ensure t
+  :after tree-sitter)
+
+
 
 
 (lsp-register-client
