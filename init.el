@@ -1324,8 +1324,8 @@
 
 (use-package treemacs-perspective
   :after (treemacs perspective)
-  :ensure: t
-  :config (treemacs-set-scope-type 'Perspectives))
+  :ensure t
+  :init (treemacs-set-scope-type 'Perspectives))
 
 (use-package treemacs-tab-bar
   :after (treemacs)
