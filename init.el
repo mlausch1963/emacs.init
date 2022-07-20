@@ -1096,6 +1096,8 @@
 
 (use-package python
   :ensure t
+  :config
+  (add-hook 'python-mode-hook  #'ws-no-tabs-highlight)
   :interpreter ("python3" . python-mode)
   :mode (("\\.py\\'" . python-mode)))
 
@@ -1307,8 +1309,14 @@
 
 (use-package treemacs-perspective
   :after (treemacs perspective)
-  :ensure: t
+  :ensure t
   :config (treemacs-set-scope-type 'Perspectives))
+
+(use-package treemacs-tab-bar
+  :after (treemacs)
+  :ensure t
+  :config (treemacs-set-scope-type 'Tabs))
+
 
 (defun mla/download-bookmark+ ()
   "Download the bookmark+ source from the Emacs wiki."
