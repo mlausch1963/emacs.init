@@ -1312,12 +1312,6 @@
   :ensure t
   :config (treemacs-set-scope-type 'Perspectives))
 
-(use-package treemacs-tab-bar
-  :after (treemacs)
-  :ensure t
-  :config (treemacs-set-scope-type 'Tabs))
-
-
 (defun mla/download-bookmark+ ()
   "Download the bookmark+ source from the Emacs wiki."
   (interactive)
@@ -1459,9 +1453,9 @@
    :map org-mode-map
    ("C-M-i" . completion-at-point))
   :bind-keymap
-  ("C-c n d" . org-roam-dailis-map)
+  ("C-c n d" . org-roam-dailies-map)
   :config
-  (org-roam-db-autosync-enable))
+  (org-roam-db-autosync-mode))
 
 (use-package consult-org-roam
   :ensure t
