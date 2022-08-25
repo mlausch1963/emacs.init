@@ -1335,7 +1335,7 @@
 (use-package treemacs-perspective
   :after (treemacs perspective)
   :ensure t
-  :init (treemacs-set-scope-type 'Perspectives))
+  :init (treemacs-set-scope-type 'Frames))
 
 (defun mla/download-bookmark+ ()
   "Download the bookmark+ source from the Emacs wiki."
