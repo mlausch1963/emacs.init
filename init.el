@@ -420,6 +420,7 @@
   :ensure t
   :after magit)
 
+
 (use-package salt-mode
   :ensure t
   :config (add-hook 'salt-mode-hook
@@ -1146,6 +1147,30 @@
          (lsp-mode . lsp-enable-which-key-integration)
          (lsp-mode . lsp-lens-mode))
   :commands (lsp lsp-deferred))
+
+
+(use-package gitlab-ci-mode
+  :ensure t
+  :after lsp-mode
+  :config (progn
+          (add-to-list 'lsp-language-id-configuration '(gitlab-ci-mode . "yaml"))
+          (lsp-register-client
+            (make-lsp-client :new-connection (lsp-stdio-connection
+                                   (lambda ()
+                                     `(,(or (executable-find (cl-first lsp-yaml-server-command))
+                                            (lsp-package-path 'yaml-language-server))
+                                       ,@(cl-rest lsp-yaml-server-command))))
+                  :major-modes '(gitlab-ci-mode)
+                  :priority 0
+                  :server-id 'yamlci
+                  :initialized-fn (lambda (workspace)
+                                    (with-lsp-workspace workspace
+                                      (lsp--set-configuration
+                                       (lsp-configuration-section "yaml"))))
+                  :download-server-fn (lambda (_client callback error-callback _update?)
+                                        (lsp-package-ensure 'yaml-language-server
+                                                            callback error-callback))))))
+
 
 (use-package lsp-ui
   :ensure t
