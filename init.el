@@ -1199,10 +1199,11 @@
 (use-package dap-mode
   :ensure t
   :config
-  (require 'dap-go)
   (require 'dap-cpptools)
   (require 'dap-lldb)
   (require 'dap-gdb-lldb)
+  (require 'dap-dlv-go)
+  (require 'dap-hydra)
   (dap-ui-mode 1)
   (dap-tooltip-mode 1)
   (dap-ui-controls-mode 1)
@@ -1228,9 +1229,6 @@
   (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
 
 (use-package gud
-  :ensure t)
-
-(use-package go-dlv
   :ensure t)
 
 (use-package beacon
