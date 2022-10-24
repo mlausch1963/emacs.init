@@ -1753,7 +1753,8 @@
   :after tree-sitter)
 
 
-
+(use-package exercism
+  :ensure t)
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-tramp-connection '("ts-js-langserver"
