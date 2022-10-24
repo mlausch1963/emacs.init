@@ -1779,6 +1779,11 @@
   (if (not (member "--stdio" lsp-go-gopls-server-args))
       (append lsp-go-gopls-server-args '("--stdio"))))
 
+(defun _fixup-gopls-server-args ()
+  (if (not (member "--stdio" lsp-rust-gopls-server-args))
+      (append lsp-go-gopls-server-args '("--stdio"))))
+
+
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-tramp-connection
                                    (lambda () (cons lsp-go-gopls-server-path (_fixup-gopls-server-args))))
@@ -1787,6 +1792,18 @@
                   :priority -2
                   :completion-in-comments? t
                   :server-id 'remote-gopls-lsp
+                  :remote? t
+                  :after-open-fn (lambda ()
+                                   (setq-local lsp-completion-filter-on-incomplete nil))))
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-tramp-connection
+                                   (lambda () '("rust-analyzer")))
+                  :major-modes '(rustic-mode)
+                  :language-id "rust"
+                  :priority -2
+                  :completion-in-comments? t
+                  :server-id 'remote-rust-lsp
                   :remote? t
                   :after-open-fn (lambda ()
                                    (setq-local lsp-completion-filter-on-incomplete nil))))
