@@ -1215,18 +1215,18 @@
          :name "GDB::Run"
          :gdbpath "rust-gdb"
          :target nil
-         :cwd nil))
+         :cwd (expand-file-name "~"))
+
   (dap-register-debug-template
    "Rust::LLDB Run Configuration"
    (list :type "lldb"
          :request "launch"
          :name "LLDB::Run"
+         :target nil
          :gdbpath "rust-lldb"
-         ;; uncomment if lldb-mi is not in PATH
-         ;; :lldbmipath "path/to/lldb-mi"
-         ))
+            ))
   :hook
-  (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
+  (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra)))))
 
 (use-package gud
   :ensure t)
