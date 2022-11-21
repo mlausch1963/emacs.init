@@ -1126,9 +1126,10 @@
   :ensure t
   ;;  :after (pyvenv)
   :config
+  (my-lsp-clients)
   (message "lsp-mode loaded")
   (setq lsp-prefer-flymake nil
-        lsp-log-io t
+        lsp-log-io nil
         lsp-rust-analyzer-cargo-watch-command "clippy")
   :hook (
          (terraform-mode . lsp)
@@ -1198,6 +1199,7 @@
 
 (use-package dap-mode
   :ensure t
+  :after 'lsp-mode
   :config
   (require 'dap-cpptools)
   (require 'dap-lldb)
@@ -1245,6 +1247,7 @@
   (setq lsp-completion-provider :capf))
 
 (use-package posframe
+  :ensure t
   ;; grame is needed by dap-mode, must be installed manually
   )
 
@@ -1360,7 +1363,14 @@
   :load-path "vendor/bookmark-plus")
 
 (use-package ein
-  :ensure t)
+  :ensure t
+  :commands (ein:notebooklist-open)
+  :config
+  (require 'ein-loaddefs)
+  (require 'ein))
+
+
+
 
 (use-package json-mode
   :ensure t
@@ -1756,22 +1766,6 @@
 (use-package exercism
   :ensure t)
 
-(lsp-register-client
- (make-lsp-client :new-connection (lsp-tramp-connection '("ts-js-langserver"
-                                                          "--stdio"))
-                  :activation-fn 'lsp-typescript-javascript-tsx-jsx-activate-p
-                  :priority -2
-                  :completion-in-comments? t
-                  :initialization-options (lambda ()
-                                            (list :plugins lsp-clients-typescript-plugins
-                                                  :logVerbosity lsp-clients-typescript-log-verbosity
-                                                  :tsServerPath (lsp-package-path 'typescript)
-                                                  :preferences lsp-clients-typescript-init-opts))
-                  :ignore-messages '("readFile .*? requested by TypeScript but content not available")
-                  :server-id 'remote-ts-ls
-                  :remote? t
-                  :request-handlers (ht ("_typescript.rename" #'lsp-javascript--rename))))
-
 ;; make sure '--stdio' is part of lsp-go-gopls-server-args
 ;; and return a modified list
 
@@ -1783,27 +1777,43 @@
   (if (not (member "--stdio" lsp-rust-gopls-server-args))
       (append lsp-go-gopls-server-args '("--stdio"))))
 
+(defun my-lsp-clients ()
+  (progn
+    (make-lsp-client :new-connection (lsp-tramp-connection
+                                      (lambda () (cons lsp-go-gopls-server-path (_fixup-gopls-server-args))))
+                     :major-modes '(go-mode go-dot-mode)
+                     :language-id "go"
+                     :priority -2
+                     :completion-in-comments? t
+                     :server-id 'remote-gopls-lsp
+                     :remote? t
+                     :after-open-fn (lambda ()
+                                      (setq-local lsp-completion-filter-on-incomplete nil))))
 
-(lsp-register-client
- (make-lsp-client :new-connection (lsp-tramp-connection
-                                   (lambda () (cons lsp-go-gopls-server-path (_fixup-gopls-server-args))))
-                  :major-modes '(go-mode go-dot-mode)
-                  :language-id "go"
-                  :priority -2
-                  :completion-in-comments? t
-                  :server-id 'remote-gopls-lsp
-                  :remote? t
-                  :after-open-fn (lambda ()
-                                   (setq-local lsp-completion-filter-on-incomplete nil))))
+  (lsp-register-client
+   (make-lsp-client :new-connection (lsp-tramp-connection
+                                     (lambda () '("rust-analyzer")))
+                    :major-modes '(rustic-mode)
+                    :language-id "rust"
+                    :priority -2
+                    :completion-in-comments? t
+                    :server-id 'remote-rust-lsp
+                    :remote? t
+                    :after-open-fn (lambda ()
+                                     (setq-local lsp-completion-filter-on-incomplete nil))))
 
-(lsp-register-client
- (make-lsp-client :new-connection (lsp-tramp-connection
-                                   (lambda () '("rust-analyzer")))
-                  :major-modes '(rustic-mode)
-                  :language-id "rust"
-                  :priority -2
-                  :completion-in-comments? t
-                  :server-id 'remote-rust-lsp
-                  :remote? t
-                  :after-open-fn (lambda ()
-                                   (setq-local lsp-completion-filter-on-incomplete nil))))
+  (lsp-register-client
+   (make-lsp-client :new-connection (lsp-tramp-connection '("ts-js-langserver"
+                                                            "--stdio"))
+                    :activation-fn 'lsp-typescript-javascript-tsx-jsx-activate-p
+                    :priority -2
+                    :completion-in-comments? t
+                    :initialization-options (lambda ()
+                                              (list :plugins lsp-clients-typescript-plugins
+                                                    :logVerbosity lsp-clients-typescript-log-verbosity
+                                                    :tsServerPath (lsp-package-path 'typescript)
+                                                    :preferences lsp-clients-typescript-init-opts))
+                    :ignore-messages '("readFile .*? requested by TypeScript but content not available")
+                    :server-id 'remote-ts-ls
+                    :remote? t
+                    :request-handlers (ht ("_typescript.rename" #'lsp-javascript--rename)))))
