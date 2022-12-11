@@ -98,6 +98,10 @@
 (unless (file-exists-p mla-savefile-dir)
   (make-directory mla-savefile-dir))
 
+(unless (file-exists-p mla-personal-dir)
+  (make-directory mla-personal-dir))
+
+
 (defun mla-add-subfolders-to-load-path (parent-dir)
   "Add all level PARENT-DIR subdirs to the `load-path'."
   (dolist (f (directory-files parent-dir))
@@ -1099,8 +1103,8 @@
   :ensure t
   :config
   (add-hook 'python-mode-hook  #'ws-no-tabs-highlight)
-  :interpreter ("python3" . python-mode)
-  :mode (("\\.py\\'" . python-mode)))
+  :interpreter ("python3" . python-ts-mode)
+  :mode (("\\.py\\'" . python-ts-mode)))
 
 (use-package pyvenv
   :ensure t
@@ -1135,6 +1139,7 @@
          (terraform-mode . lsp)
          (typescript-mode . lsp)
          (ruby-mode . lsp)
+         (ruby-ts-mode . lsp)
          (js-mode . lsp)
          (javascript-mode . lsp)
          (yaml-mode . lsp)
@@ -1142,7 +1147,12 @@
          (web-mode . lsp)
          (c-mode . lsp)
          (c++-mode . lsp)
+         (c-ts-mode . lsp)
+         (c++-ts-mode . lsp)
          (python-mode . (lambda ()
+                          (require 'lsp-pylsp)
+                          (lsp)))
+         (python-ts-mode . (lambda ()
                           (require 'lsp-pylsp)
                           (lsp)))
          (lsp-mode . lsp-enable-which-key-integration)
@@ -1745,22 +1755,22 @@
   )
 
 
-(use-package tree-sitter
-  :ensure t
-  :config
-  ;; activate tree-sitter on any buffer containing code for which it has a parser available
-  (global-tree-sitter-mode)
-  ;; you can easily see the difference tree-sitter-hl-mode makes for python, ts or tsx
-  ;; by switching on and off
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+;; (use-package tree-sitter
+;;   :ensure t
+;;   :config
+;;   ;; activate tree-sitter on any buffer containing code for which it has a parser available
+;;   (global-tree-sitter-mode)
+;;   ;; you can easily see the difference tree-sitter-hl-mode makes for python, ts or tsx
+;;   ;; by switching on and off
+;;   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
 
-(use-package tree-sitter-langs
-  :ensure t
-  :after tree-sitter)
+;; (use-package tree-sitter-langs
+;;   :ensure t
+;;   :after tree-sitter)
 
-(use-package tree-sitter-indent
-  :ensure t
-  :after tree-sitter)
+;; (use-package tree-sitter-indent
+;;   :ensure t
+;;   :after tree-sitter)
 
 
 (use-package exercism
