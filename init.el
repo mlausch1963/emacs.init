@@ -1433,6 +1433,11 @@
   (setq org-agenda-files (list
                           "~/Dropbox-Decrypted/org/agenda.org"
                           "~/Dropbox-Decrypted/org/home.org"
+                          "~/Dropbox-Decrypted/org/kubernetes.org"
+                          "~/Dropbox-Decrypted/org/omnia.org"
+                          "~/Dropbox-Decrypted/org/personal-projects.org"
+                          "~/Dropbox-Decrypted/org/technology.org"
+                          "~/Dropbox-Decrypted/org/todo.org"
                           "~/Dropbox-Decrypted/org/work.org")))
 
 (use-package org-pomodoro
