@@ -191,6 +191,12 @@
 (size-indication-mode t)
 (window-divider-mode t)
 
+(require 'treesit)
+
+(add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
+(add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode))
+(add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
+
 (use-package all-the-icons
   :ensure t)
 
@@ -431,6 +437,8 @@
                     (lambda ()
                       (flyspell-mode 1)))
   :mode (("\\.sls\\'" . salt-mode)))
+
+
 
 
 (if use-vertico-p
@@ -1079,6 +1087,10 @@
   (go-mode . lsp-deferred)
   (go-mode . lsp-go-install-save-hooks)
   (go-mode . company-mode)
+  (go-ts-mode . ws-no-tabs-highlight)
+  (go-ts-mode . lsp-deferred)
+  (go-ts-mode . lsp-go-install-save-hooks)
+  (go-ts-mode . company-mode)
   :ensure t)
 
 (use-package go-stacktracer
@@ -1103,8 +1115,8 @@
   :ensure t
   :config
   (add-hook 'python-mode-hook  #'ws-no-tabs-highlight)
-  :interpreter ("python3" . python-ts-mode)
-  :mode (("\\.py\\'" . python-ts-mode)))
+  :interpreter ("python3" . python-mode)
+  :mode (("\\.py\\'" . python-mode)))
 
 (use-package pyvenv
   :ensure t
@@ -1130,7 +1142,6 @@
   :ensure t
   ;;  :after (pyvenv)
   :config
-  (my-lsp-clients)
   (message "lsp-mode loaded")
   (setq lsp-prefer-flymake nil
         lsp-log-io nil
@@ -1156,31 +1167,8 @@
                           (require 'lsp-pylsp)
                           (lsp)))
          (lsp-mode . lsp-enable-which-key-integration)
-         (lsp-mode . lsp-lens-mode))
-  :commands (lsp lsp-deferred))
+         (lsp-mode . lsp-lens-mode)))
 
-
-(use-package gitlab-ci-mode
-  :ensure t
-  :after lsp-mode
-  :config (progn
-          (add-to-list 'lsp-language-id-configuration '(gitlab-ci-mode . "yaml"))
-          (lsp-register-client
-            (make-lsp-client :new-connection (lsp-stdio-connection
-                                   (lambda ()
-                                     `(,(or (executable-find (cl-first lsp-yaml-server-command))
-                                            (lsp-package-path 'yaml-language-server))
-                                       ,@(cl-rest lsp-yaml-server-command))))
-                  :major-modes '(gitlab-ci-mode)
-                  :priority 0
-                  :server-id 'yamlci
-                  :initialized-fn (lambda (workspace)
-                                    (with-lsp-workspace workspace
-                                      (lsp--set-configuration
-                                       (lsp-configuration-section "yaml"))))
-                  :download-server-fn (lambda (_client callback error-callback _update?)
-                                        (lsp-package-ensure 'yaml-language-server
-                                                            callback error-callback))))))
 
 
 (use-package lsp-ui
@@ -1760,6 +1748,14 @@
   )
 
 
+(use-package codespaces
+  :ensure t
+  :config (codespaces-setup)
+  :bind ("C-c S" . #'codespaces-connect))
+
+(setq vc-handled-backends '(Git))
+
+
 ;; (use-package tree-sitter
 ;;   :ensure t
 ;;   :config
@@ -1781,6 +1777,42 @@
 (use-package exercism
   :ensure t)
 
+(use-package gitlab-ci-mode
+  :ensure t
+  :after lsp-mode
+  :init (progn
+          (add-to-list 'lsp-language-id-configuration '(gitlab-ci-mode . "yaml"))
+          (lsp-register-client
+           (make-lsp-client :new-connection (lsp-tramp-connection
+                                             (lambda () '("gh-solargraph" "stdio")))
+                            :major-modes '(ruby-mode)
+                            :language-id "ruby"
+                            :priority -2
+                            :server-id 'remote-solargraph-lsp
+                            :remote? t
+                            :after-open-fn (lambda ()
+                                             (setq-local lsp-completion-filter-on-incomplete nil))))
+          :commands (lsp lsp-deferred)
+
+          (lsp-register-client
+           (make-lsp-client :new-connection (lsp-stdio-connection
+                                             (lambda ()
+                                               `(,(or (executable-find (cl-first lsp-yaml-server-command))
+                                                      (lsp-package-path 'yaml-language-server))
+                                                 ,@(cl-rest lsp-yaml-server-command))))
+                            :major-modes '(gitlab-ci-mode)
+                            :priority 0
+                            :server-id 'yamlci
+                            :initialized-fn (lambda (workspace)
+                                              (with-lsp-workspace workspace
+                                                                  (lsp--set-configuration
+                                                                   (lsp-configuration-section "yaml"))))
+                            :download-server-fn (lambda (_client callback error-callback _update?)
+                                                  (lsp-package-ensure 'yaml-language-server
+                                                                      callback error-callback))))))
+
+
+
 ;; make sure '--stdio' is part of lsp-go-gopls-server-args
 ;; and return a modified list
 
@@ -1791,44 +1823,3 @@
 (defun _fixup-gopls-server-args ()
   (if (not (member "--stdio" lsp-rust-gopls-server-args))
       (append lsp-go-gopls-server-args '("--stdio"))))
-
-(defun my-lsp-clients ()
-  (progn
-    (make-lsp-client :new-connection (lsp-tramp-connection
-                                      (lambda () (cons lsp-go-gopls-server-path (_fixup-gopls-server-args))))
-                     :major-modes '(go-mode go-dot-mode)
-                     :language-id "go"
-                     :priority -2
-                     :completion-in-comments? t
-                     :server-id 'remote-gopls-lsp
-                     :remote? t
-                     :after-open-fn (lambda ()
-                                      (setq-local lsp-completion-filter-on-incomplete nil))))
-
-  (lsp-register-client
-   (make-lsp-client :new-connection (lsp-tramp-connection
-                                     (lambda () '("rust-analyzer")))
-                    :major-modes '(rustic-mode)
-                    :language-id "rust"
-                    :priority -2
-                    :completion-in-comments? t
-                    :server-id 'remote-rust-lsp
-                    :remote? t
-                    :after-open-fn (lambda ()
-                                     (setq-local lsp-completion-filter-on-incomplete nil))))
-
-  (lsp-register-client
-   (make-lsp-client :new-connection (lsp-tramp-connection '("ts-js-langserver"
-                                                            "--stdio"))
-                    :activation-fn 'lsp-typescript-javascript-tsx-jsx-activate-p
-                    :priority -2
-                    :completion-in-comments? t
-                    :initialization-options (lambda ()
-                                              (list :plugins lsp-clients-typescript-plugins
-                                                    :logVerbosity lsp-clients-typescript-log-verbosity
-                                                    :tsServerPath (lsp-package-path 'typescript)
-                                                    :preferences lsp-clients-typescript-init-opts))
-                    :ignore-messages '("readFile .*? requested by TypeScript but content not available")
-                    :server-id 'remote-ts-ls
-                    :remote? t
-                    :request-handlers (ht ("_typescript.rename" #'lsp-javascript--rename)))))
