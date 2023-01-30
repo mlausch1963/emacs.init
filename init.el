@@ -1812,6 +1812,10 @@
                                                                       callback error-callback))))))
 
 
+(use-package treesit-auto
+  :ensure t
+  :config
+  (treesit-auto-apply-remap))
 
 ;; make sure '--stdio' is part of lsp-go-gopls-server-args
 ;; and return a modified list
