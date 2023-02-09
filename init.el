@@ -980,11 +980,15 @@
 (use-package yaml-mode
   :ensure t
   :init
+  (require 'yaml-ts-mode)
   (add-hook 'yaml-mode-hook 'display-line-numbers-mode)
   (add-hook 'yaml-mode-hook 'highlight-indentation-mode)
+  (add-hook 'yaml-ts-mode-hook 'display-line-numbers-mode)
+  (add-hook 'yaml-ts-mode-hook 'highlight-indentation-mode)
   :bind
   (:map yaml-mode-map
         ("\C-m" . newline-and-indent)))
+
 
 (if (executable-find "rg")
     (use-package rg
