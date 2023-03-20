@@ -197,6 +197,9 @@
 (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode))
 (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
 
+(use-package compat
+	     :ensure t)
+
 (use-package all-the-icons
   :ensure t)
 
@@ -983,9 +986,9 @@
   (require 'yaml-ts-mode)
   (add-hook 'yaml-mode-hook 'display-line-numbers-mode)
   (add-hook 'yaml-mode-hook 'highlight-indentation-mode)
-  (add-hook 'yaml-ts-mode-hook 'display-line-numbers-mode)
-  (add-hook 'yaml-ts-mode-hook 'highlight-indentation-mode)
   :bind
+  (:map yaml-ts-mode-map
+        ("\C-m" . newline-and-indent))
   (:map yaml-mode-map
         ("\C-m" . newline-and-indent)))
 
@@ -1157,7 +1160,8 @@
          (ruby-ts-mode . lsp)
          (js-mode . lsp)
          (javascript-mode . lsp)
-         (yaml-mode . lsp)
+         (yaml-mode . lsp-deferred)
+         (yaml-ts-mode . lsp-deferred)
          (typescript-mode . lsp)
          (web-mode . lsp)
          (c-mode . lsp)
@@ -1414,7 +1418,6 @@
 
 (use-package protobuf-mode
   :init
-  (add-hook 'yaml-mode-hook 'display-line-numbers-mode)
   :ensure t)
 
 (use-package org
@@ -1819,6 +1822,11 @@
 (use-package treesit-auto
   :ensure t
   :config
+
+  (setq treesit-auto-install 'prompt)
+
+  (setq yaml-ts-mode-hook yaml-mode-hook)
+
   (global-treesit-auto-mode))
 
 ;; make sure '--stdio' is part of lsp-go-gopls-server-args
