@@ -1822,12 +1822,15 @@
 (use-package treesit-auto
   :ensure t
   :config
-
   (setq treesit-auto-install 'prompt)
-
   (setq yaml-ts-mode-hook yaml-mode-hook)
-
   (global-treesit-auto-mode))
+
+(use-package meson-mode
+  :ensure t
+  :config (add-hook 'meson-mode-hook 'company-mode)
+)
+
 
 ;; make sure '--stdio' is part of lsp-go-gopls-server-args
 ;; and return a modified list
