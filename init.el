@@ -1372,7 +1372,7 @@
   :ensure t
   :commands (ein:notebooklist-open)
   :config
-  (require 'ein-loaddefs)
+  ;;(require 'ein-loaddefs)
   (require 'ein))
 
 
