@@ -1148,6 +1148,8 @@
 (use-package lsp-mode
   :ensure t
   ;;  :after (pyvenv)
+  :commands
+  (lsp lsp-deferred)
   :config
   (message "lsp-mode loaded")
   (setq lsp-prefer-flymake nil
