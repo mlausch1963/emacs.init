@@ -139,11 +139,14 @@
       '(("GNU ELPA"     . "https://elpa.gnu.org/packages/")
         ("MELPA Stable" . "https://stable.melpa.org/packages/")
         ("MELPA"        . "https://melpa.org/packages/")
+        ("jcs-elpa"     . "https://jcs-emacs.github.io/jcs-elpa/packages/")
         ("org"          . "https://orgmode.org/elpa/"))
+
       package-archive-priorities
       '(("MELPA Stable" . 10)
         ("GNU ELPA"     . 5)
         ("org"          . 5)
+        ("jcs-elpa"     . 0)
         ("MELPA"        . 20)
         ))
 
@@ -980,12 +983,19 @@
 (use-package highlight-indentation
   :ensure t)
 
+(defun mla/fix-yaml-ts-indent ()
+  (setq-local indent-line-function #'yaml-indent-line))
+
 (use-package yaml-mode
   :ensure t
   :init
   (require 'yaml-ts-mode)
-  (add-hook 'yaml-mode-hook 'display-line-numbers-mode)
-  (add-hook 'yaml-mode-hook 'highlight-indentation-mode)
+  :config
+  (add-hook 'yaml-mode-hook #'display-line-numbers-mode)
+  (add-hook 'yaml-mode-hook #'highlight-indentation-mode)
+  (add-hook 'yaml-ts-mode-hook #'mla/fix-yaml-ts-indent)
+  (add-hook 'yaml-ts-mode-hook #'display-line-numbers-mode)
+  (add-hook 'yaml-ts-mode-hook #'highlight-indentation-mode)
   :bind
   (:map yaml-ts-mode-map
         ("\C-m" . newline-and-indent))
@@ -1385,20 +1395,6 @@
   :mode (("\\.json\\'" . json-mode)))
 
 
-(use-package slime
-  :config
-  (progn
-    (load (expand-file-name "~/quicklisp/slime-helper.el")
-          (setq inferior-lisp-program "/usr/bin/sbcl")))
-  :ensure t
-  :mode (("\\.lsp\\'" . slime-mode)
-         ("\\.lisp\\'" . slime-mode)))
-
-(use-package slime-company
-  :ensure t)
-
-(use-package slime-docker
-  :ensure t)
 
 (use-package goggles
   :demand t
@@ -1833,6 +1829,9 @@
   :config (add-hook 'meson-mode-hook 'company-mode)
 )
 
+(use-package sly
+  :ensure t
+  )
 
 ;; make sure '--stdio' is part of lsp-go-gopls-server-args
 ;; and return a modified list
