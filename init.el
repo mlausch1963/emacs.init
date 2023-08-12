@@ -203,6 +203,34 @@
 (use-package compat
 	     :ensure t)
 
+(use-package protobuf-mode
+  :init
+  :ensure t)
+
+(use-package org
+  :ensure t
+  :bind
+  ("C-c a". org-agenda)
+  :config
+  (setq org-agenda-files (list
+                          "~/Dropbox-Decrypted/org/agenda.org"
+                          "~/Dropbox-Decrypted/org/home.org"
+                          "~/Dropbox-Decrypted/org/kubernetes.org"
+                          "~/Dropbox-Decrypted/org/omnia.org"
+                          "~/Dropbox-Decrypted/org/personal-projects.org"
+                          "~/Dropbox-Decrypted/org/technology.org"
+                          "~/Dropbox-Decrypted/org/todo.org"
+                          "~/Dropbox-Decrypted/org/work.org")))
+
+(use-package org-ref
+  :ensure t
+  )
+
+
+(use-package org-pomodoro
+  :ensure t)
+
+
 (use-package all-the-icons
   :ensure t)
 
