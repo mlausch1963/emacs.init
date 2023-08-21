@@ -1,4 +1,3 @@
-                                        ; init.el --- Prelude's configuration entry point.
 ;;
 ;; Copyright (c) 2019 Michael Lausch
 ;;
@@ -1168,9 +1167,19 @@
   :defer t
   :diminish
   :config
+  (pyvenv-mode t)
   (setenv "WORKON_HOME" "~/.virtualenvs")
-  (add-hook 'pyython-mode-hook  #'pyvenv-tracking-mode)
-  (add-hook 'python-mode-hook #'pyvenv-mode))
+  (add-hook 'python-ts-mode-hook  #'pyvenv-tracking-mode)
+  (add-hook 'python-ts-mode-hook #'pyvenv-mode)
+  (add-hook 'python-mode-hook  #'pyvenv-tracking-mode)
+  (add-hook 'python-mode-hook #'pyvenv-mode)
+  ;; Set correct Python interpreter
+  (setq pyvenv-post-activate-hooks
+        (list (lambda ()
+                (setq python-shell-interpreter (concat pyvenv-virtual-env "bin/python3")))))
+  (setq pyvenv-post-deactivate-hooks
+        (list (lambda ()
+                (setq python-shell-interpreter "python3")))))
 
 (use-package typescript-mode
   :ensure t
