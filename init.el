@@ -1870,6 +1870,11 @@
   :ensure t
   )
 
+(use-package dot-env
+  :ensure t
+  :config
+  (dot-env-config))
+
 ;; make sure '--stdio' is part of lsp-go-gopls-server-args
 ;; and return a modified list
 
