@@ -28,11 +28,9 @@
 ;;; Code:
 
 
-(defvar use-helm-p nil)
 (defvar use-vertico-p t)
 (defvar use-consult-p t)
 (defvar use-orderless-p t)
-(defvar use-rtags-p nil)
 
 (when (version< emacs-version "25.1")
   (error "Mla requires GNU Emacs 25.1 or newer, but you're running %s" emacs-version))
@@ -853,102 +851,6 @@
                                             mla/orderless-flex-dispatcher)))))
 
 
-(if use-helm-p
-    (progn
-      (/ 1 0)
-      (use-package helm
-        :ensure t
-        :diminish helm-mode
-        :init
-        (require 'shell)
-        :config
-        (require 'helm-config)
-        (setq projectile-complet\ion-system 'helm)
-        (setq helm-split-window-inside-p t
-              helm-buffers-fuzzy-matching t
-              helm-move-to-line-cycle-in-source t
-              helm-ff-search-library-in-sexp t
-              helm-ff-file-name-history-use-recentf t
-              helm-split-window-default-side 'other)
-
-        (global-unset-key (kbd "C-x c"))
-        (helm-mode 1)
-        :hook
-        (eshell-mode . (lambda ()
-                         (substitute-key-definition 'eshell-list-history 'helm-eshell-history eshell-mode-map)))
-        :bind-keymap
-        ("C-c h" . helm-command-prefix)
-        :bind (
-               (("M-x" . helm-M-x)
-                ("M-y" . helm-show-kill-ring)
-                ("C-x C-f" . helm-find-files)
-                ("C-x f" . helm-recentf)
-                ("C-c o" . helm-occur)
-                ("C-x b" . helm-mini)
-                ("C-x C-b" . helm-buffers-list)
-                ("C-h f" . helm-apropos)
-                ("C-h r" . helm-info-emacs)
-                ("C-c C-l" . helm-locate-library))
-               :map minibuffer-local-map
-               ("C-c  C-l" . 'helm-minibuffer-history)
-               :map isearch-mode-map
-               ("C-o" . 'helm-occur-from-isearch)
-               :map shell-mode-map
-               ("C-c C-l" . 'helm-comint-input-ring)
-               :map helm-map
-               ("<tab>" . 'helm-execute-persistent-action)
-               :map helm-map
-               ("C-i" . 'helm-execute-persistent-action)
-               ("C-z" . helm-select-action)))
-
-      (use-package helm-swoop
-        :ensure t
-        :bind
-        (("C-S-s" . helm-swoop-without-pre-input)
-         ("S-s" . helm-swoop)))
-
-      (use-package helm-descbinds
-        :ensure t
-        :init
-        (helm-descbinds-mode))
-
-      (use-package helm-git-grep
-        :ensure t
-        :bind
-        (("C-c j" . helm-git-grep)
-         ("C-c J" . helm-git-grep-at-point)))
-
-      (use-package helm-ls-git
-        :ensure t
-        :bind
-        (("C-c g" . helm-ls-git-ls)))
-
-      (use-package helm-make
-        :ensure t
-        :bind
-        (("C-c K" . helm-make)))
-
-      (use-package helm-projectile
-        :ensure t
-        :config
-        :after (helm projectile)
-        (helm-projectile-on))
-
-      (use-package helm-lsp
-        :ensure t
-        :after (helm
-                :commands helm-lsp-workspace-symbol))
-
-      (use-package flyspell-correct-helm
-        :ensure t
-        :demand t
-        :bind ("C-M-;" . flyspell-correct-wrapper)
-        :init (setq flyspell-correct-interface #'flyspell-correct-helm))
-
-      (use-package helm-org
-        :ensure t)
-
-      ))
 
 (use-package projectile
   :ensure t
@@ -1085,42 +987,6 @@
 (add-hook 'c-mode-hook 'lsp)
 (add-hook 'c-mode-common-hook #'ws-no-tabs-highlight)
 
-(if use-rtags-p
-    (progn
-      (use-package rtags
-        :ensure t
-        :init
-        (add-hook 'c-mode-common-hook  #'rtags-start-process-unless-running)
-        :demand
-        :bind
-        (:map c-mode-map
-              ("M-." . rtags-find-symbol-at-point)
-              ("S-." . rtags-find-references-at-point)
-              ("M-," . rtags-location-stack-back))
-
-        :config
-        (progn
-          (rtags-enable-standard-keybindings nil "C-c R")
-          (setq rtags-autostart-diagnostics t)
-          (rtags-diagnostics)
-          (setq rtags-completions-enabled t)))
-
-
-      (use-package company-rtags
-        :config
-        (push 'company-rtags company-backends))
-
-      (if use-helm-p
-          (use-package helm-rtags
-            :ensure t
-            :init
-            (setq rtags-use-helm t)
-            :config
-            (setq rtags-display-result-backend 'helm)))
-
-      (use-package flycheck-rtags
-        :ensure t)
-      ))
 
 (defun lsp-go-install-save-hooks ()
   (add-hook 'before-save-hook #'lsp-format-buffer t t)
