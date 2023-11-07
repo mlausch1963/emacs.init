@@ -29,8 +29,8 @@
 ;;; Code:
 
 
-(when (version< emacs-version "25.1")
-  (error "Mla requires GNU Emacs 25.1 or newer, but you're running %s" emacs-version))
+(when (version< emacs-version "29.1")
+  (error "Mla requires GNU Emacs 29.1 or newer, but you're running %s" emacs-version))
 
 (defvar current-user
   (getenv
@@ -1751,3 +1751,9 @@
   :ensure t
   :config
   (all-the-icons-nerd-fonts-prefer))
+
+(use-package jinx
+  :init
+  (dolist (hook '(text-mode-hook prog-mode-hook conf-mode-hook))
+  (add-hook hook #'jinx-mode))
+  :ensure t)
