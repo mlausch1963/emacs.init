@@ -1538,10 +1538,17 @@
 
 (use-package perspective
   :ensure t
+  :after (consult)
+  :defines
+  persp-mode
+  :init
+  (persp-mode)
   :custom
   (persp-mode-prefix-key (kbd "C-s-p"))
-  (persp-state-default-file (expand-file-name "perspectives.el" mla-personal-dir))
-  :init (persp-mode)
+  (persp-state-default-file (expand-file-name "my-persp-save.el" mla-personal-dir))
+  :config
+  (add-to-list 'consult-buffer-sources persp-consult-source)
+  (consult-customize consult--source-buffer :hidden t :default nil)
   :hook (kill-emacs . persp-state-save))
 
 
@@ -1757,3 +1764,10 @@
   (dolist (hook '(text-mode-hook prog-mode-hook conf-mode-hook))
   (add-hook hook #'jinx-mode))
   :ensure t)
+
+
+(customize-set-variable 'display-buffer-base-action
+  '((display-buffer-reuse-window display-buffer-same-window)
+    (reusable-frames . t)))
+
+(customize-set-variable 'even-window-sizes nil)     ; avoid resizing
