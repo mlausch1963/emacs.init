@@ -1028,13 +1028,14 @@
   :ensure t
   :defer t
   :diminish
+  :after (python-ts-mode python-mode)
   :config
   (pyvenv-mode t)
-  (setenv "WORKON_HOME" "~/.virtualenvs")
   (add-hook 'python-ts-mode-hook  #'pyvenv-tracking-mode)
   (add-hook 'python-ts-mode-hook #'pyvenv-mode)
   (add-hook 'python-mode-hook  #'pyvenv-tracking-mode)
   (add-hook 'python-mode-hook #'pyvenv-mode)
+
   ;; Set correct Python interpreter
   (setq pyvenv-post-activate-hooks
         (list (lambda ()
