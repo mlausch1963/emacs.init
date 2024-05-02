@@ -1769,6 +1769,11 @@
   :ensure t)
 
 
+(use-package treesit-fold
+  :ensure t
+  :after treesit
+  )
+
 (customize-set-variable 'display-buffer-base-action
   '((display-buffer-reuse-window display-buffer-same-window)
     (reusable-frames . t)))
