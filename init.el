@@ -1817,3 +1817,14 @@ before we send our 'ok' to the SessionManager."
  "/org/gnome/SessionManager"
  "org.gnome.SessionManager" "RegisterClient" 'my-register-signals
  "Emacs server" (getenv "DESKTOP_AUTOSTART_ID"))
+
+
+;;
+;; See https://gitlab.com/arvidnl/magit-gitlab
+;; fpr more information
+(use-package magit-gitlab
+  :ensure t
+  :config
+  ;; Update magit-mode-map such that pressing @ opens the magit-gitlab-mr transient
+  (define-key magit-mode-map (kbd "@") 'magit-gitlab-mr)
+  (transient-append-suffix 'magit-dispatch "!" '("@" "Act on MR" magit-gitlab-mr)))
