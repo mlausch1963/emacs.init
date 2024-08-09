@@ -1828,3 +1828,9 @@ before we send our 'ok' to the SessionManager."
   ;; Update magit-mode-map such that pressing @ opens the magit-gitlab-mr transient
   (define-key magit-mode-map (kbd "@") 'magit-gitlab-mr)
   (transient-append-suffix 'magit-dispatch "!" '("@" "Act on MR" magit-gitlab-mr)))
+
+
+(use-package dockerfile-mode
+  :ensure t)
+
+;;; init.el ends here
