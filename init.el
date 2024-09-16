@@ -199,6 +199,13 @@
 (size-indication-mode t)
 (window-divider-mode t)
 
+
+(add-to-list 'tramp-default-proxies-alist
+                 '("loki" nil "/ssh:mla@git.lausch.at:"))
+
+(add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+
+
 (require 'treesit)
 
 (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
