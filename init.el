@@ -184,6 +184,13 @@
       scroll-conservatively 100000
       scroll-preserve-screen-position 1)
 
+
+(add-to-list 'tramp-default-proxies-alist
+                 '("loki" nil "/ssh:mla@git.lausch.at:"))
+
+(add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+
+
 ;; mode line settings
 (line-number-mode t)
 (column-number-mode t)
@@ -1832,5 +1839,8 @@ before we send our 'ok' to the SessionManager."
 
 (use-package dockerfile-mode
   :ensure t)
+
+
+
 
 ;;; init.el ends here
