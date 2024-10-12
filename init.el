@@ -185,6 +185,8 @@
       scroll-preserve-screen-position 1)
 
 
+(require 'tramp)
+
 (add-to-list 'tramp-default-proxies-alist
                  '("loki" nil "/ssh:mla@git.lausch.at:"))
 
