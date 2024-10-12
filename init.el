@@ -1843,6 +1843,7 @@ before we send our 'ok' to the SessionManager."
   :ensure t)
 
 
-
+(use-package jwt
+  :ensure t)
 
 ;;; init.el ends here
