@@ -186,8 +186,6 @@
 
 (require 'tramp)
 
-(require 'tramp)
-
 (add-to-list 'tramp-default-proxies-alist
                  '("loki" nil "/ssh:mla@git.lausch.at:"))
 
