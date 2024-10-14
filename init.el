@@ -184,6 +184,7 @@
       scroll-conservatively 100000
       scroll-preserve-screen-position 1)
 
+(require 'tramp)
 
 (require 'tramp)
 
@@ -199,11 +200,12 @@
 (size-indication-mode t)
 (window-divider-mode t)
 
-
+(require 'tramp)
 (add-to-list 'tramp-default-proxies-alist
                  '("loki" nil "/ssh:mla@git.lausch.at:"))
 
 (add-to-list 'tramp-remote-path 'tramp-own-remote-path)
+
 
 
 (require 'treesit)
@@ -898,7 +900,7 @@
   (dolist (hook '(prog-mode-hook text-mode-hook))
     (add-hook hook #'whitespace-mode))
   (add-hook 'before-save-hook #'whitespace-cleanup)
-  (setq whitespace-line-column 80) ;; limit line length
+  (setq whitespace-line-column 100) ;; limit line length
   (setq whitespace-style '(face tabs empty trailing lines-tail)))
 
 
@@ -997,6 +999,8 @@
 (add-hook 'makefile-mode-hook #'ws-no-tabs-highlight)
 (add-hook 'c-mode-hook 'lsp)
 (add-hook 'c-mode-common-hook #'ws-no-tabs-highlight)
+
+
 
 
 (defun lsp-go-install-save-hooks ()
@@ -1849,8 +1853,6 @@ before we send our 'ok' to the SessionManager."
 (use-package dockerfile-mode
   :ensure t)
 
-
 (use-package jwt
   :ensure t)
-
 ;;; init.el ends here
