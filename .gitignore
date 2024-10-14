@@ -19,3 +19,11 @@
 /.dap-breakpoints
 /.org-id-locations
 /forge-database-v7-20220624-1836.sql
+/.extension/
+/eln-cache/
+/eshell/
+/*.sqlite
+/straight/
+/tree-sitter/
+/tramp
+/url/
