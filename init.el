@@ -1853,4 +1853,14 @@ before we send our 'ok' to the SessionManager."
 
 (use-package jwt
   :ensure t)
+
+(use-package ellama
+  :ensure t
+  :init
+  (setopt ellama-language "English")
+  (require 'llm-ollama)
+  (setopt ellama-provider
+          (make-llm-ollama
+           :chat-model "codellama:34b" :embedding-model "codellama:34b")))
+
 ;;; init.el ends here
