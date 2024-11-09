@@ -111,7 +111,7 @@
 (add-to-list 'load-path mla-core-dir)
 (add-to-list 'load-path mla-modules-dir)
 (if (file-exists-p mla-vendor-dir)
-  (progn 
+  (progn
     (add-to-list 'load-path mla-vendor-dir)
     (mla-add-subfolders-to-load-path mla-vendor-dir)))
 
@@ -1276,29 +1276,6 @@
   :ensure t
   :init (treemacs-set-scope-type 'Frames))
 
-(defun mla/download-bookmark+ ()
-  "Download the bookmark+ source from the Emacs wiki."
-  (interactive)
-  (let ((gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
-        (bookmarkplus-dir "~/.emacs.d/vendor/bookmark-plus/")
-        (emacswiki-base "https://www.emacswiki.org/emacs/download/")
-        (bookmark-files '("bookmark+.el" "bookmark+-mac.el" "bookmark+-bmu.el" "bookmark+-key.el" "bookmark+-lit.el" "bookmark+-1.el")))
-    (require 'url)
-    (add-to-list 'load-path bookmarkplus-dir)
-    (make-directory bookmarkplus-dir t)
-    (mapcar (lambda (arg)
-              (let ((local-file (concat bookmarkplus-dir arg)))
-                (unless (file-exists-p local-file)
-                  (url-copy-file (concat emacswiki-base arg) local-file t))))
-            bookmark-files)
-    (byte-recompile-directory bookmarkplus-dir 0)))
-
-
-(use-package bookmark+
-  :config
-  (setq bookmark-version-control t)
-  (setq delete-old-versions t)
-  :load-path "vendor/bookmark-plus")
 
 (use-package ein
   :ensure t
@@ -1306,9 +1283,6 @@
   :config
   ;;(require 'ein-loaddefs)
   (require 'ein))
-
-
-
 
 (use-package json-mode
   :ensure t
@@ -1865,4 +1839,50 @@ before we send our 'ok' to the SessionManager."
           (make-llm-ollama
            :chat-model "codellama:34b" :embedding-model "codellama:34b")))
 
+
+(use-package dape
+  :ensure t
+
+  :preface
+  ;; By default dape shares the same keybinding prefix as `gud'
+  ;; If you do not want to use any prefix, set it to nil.
+  ;; (setq dape-key-prefix "\C-x\C-a")
+
+  ;;:hook
+  ;; Save breakpoints on quit
+  ;; ((kill-emacs . dape-breakpoint-save)
+  ;; Load breakpoints on startup
+  ;;  (after-init . dape-breakpoint-load))
+
+  :config
+  ;; Turn on global bindings for setting breakpoints with mouse
+  (dape-breakpoint-global-mode)
+
+  ;; Info buffers to the right
+  ;; (setq dape-buffer-window-arrangement 'right)
+
+  ;; Info buffers like gud (gdb-mi)
+  (setq dape-buffer-window-arrangement 'gud)
+  (setq dape-info-hide-mode-line nil)
+
+  ;; Pulse source line (performance hit)
+  (add-hook 'dape-display-source-hook 'pulse-momentary-highlight-one-line)
+
+  ;; Showing inlay hints
+  (setq dape-inlay-hints t)
+
+  ;; Save buffers on startup, useful for interpreted languages
+  ;; (add-hook 'dape-start-hook (lambda () (save-some-buffers t t)))
+
+  ;; Kill compile buffer on build success
+  ;; (add-hook 'dape-compile-hook 'kill-buffer)
+
+  ;; Projectile users
+  (setq dape-cwd-fn 'projectile-project-root)
+  )
+
+;; Enable repeat mode for more ergonomic `dape' use
+(use-package repeat
+  :config
+  (repeat-mode))
 ;;; init.el ends here
