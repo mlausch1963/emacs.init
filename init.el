@@ -1837,7 +1837,8 @@ before we send our 'ok' to the SessionManager."
   (require 'llm-ollama)
   (setopt ellama-provider
           (make-llm-ollama
-           :chat-model "codellama:34b" :embedding-model "codellama:34b")))
+           :chat-model "qwen2.5-coder:32b" :embedding-model "qwen2.5-coder:32b")))
+
 
 
 (use-package dape
