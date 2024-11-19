@@ -28,6 +28,8 @@
 
 ;; add as comment
 
+;; Source of inspiration: https://github.com/justinbarclay/.emacs.d
+
 ;;; Code:
 
 
@@ -120,11 +122,26 @@
 
 ;; reduce the frequency of garbage collection by making it happen on
 ;; each 50MB of allocated data (the default is on every 0.76MB)
-(setq gc-cons-threshold 100000000)
-(setq read-process-output-max (* 1024 1024)) ;; 1mb
+(setq gc-cons-threshold 1000000000)
+
+(run-with-idle-timer
+ 5 nil
+ (lambda ()
+   (setq-default gc-cons-threshold (* 1024 1024 100))
+   (message "gc-cons-threshold restored to %S"
+            gc-cons-threshold)))
+
+(setq native-comp-deferred-compilation-deny-list '())
+(setq native-comp-async-report-warnings-errors nil)
+
+(setq read-process-output-max (* 2 1024 1024)) ;; 2mb
 
 ;; warn when opening files bigger than 100MB
 (setq large-file-warning-threshold 100000000)
+
+
+(setq-default lexical-binding t
+              load-prefer-newer t)
 
 (eval-after-load 'smerge-mode
   (lambda ()
@@ -217,34 +234,6 @@
 
 (use-package compat
 	     :ensure t)
-
-(use-package protobuf-mode
-  :init
-  :ensure t)
-
-(use-package org
-  :ensure t
-  :bind
-  ("C-c a". org-agenda)
-  :config
-  (setq org-agenda-files (list
-                          "~/Dropbox-Decrypted/org/agenda.org"
-                          "~/Dropbox-Decrypted/org/home.org"
-                          "~/Dropbox-Decrypted/org/kubernetes.org"
-                          "~/Dropbox-Decrypted/org/omnia.org"
-                          "~/Dropbox-Decrypted/org/personal-projects.org"
-                          "~/Dropbox-Decrypted/org/technology.org"
-                          "~/Dropbox-Decrypted/org/todo.org"
-                          "~/Dropbox-Decrypted/org/work.org")))
-
-(use-package org-ref
-  :ensure t
-  )
-
-
-(use-package org-pomodoro
-  :ensure t)
-
 
 (use-package all-the-icons
   :ensure t)
@@ -1303,32 +1292,108 @@
   :ensure t
   )
 
-(use-package org-ref
-  :ensure t
-  )
-
-
 (use-package protobuf-mode
   :init
   :ensure t)
 
+
 (use-package org
+  :defer t
   :ensure t
   :bind
-  ("C-c a". org-agenda)
-  :config
-  (setq org-agenda-files (list
-                          "~/Dropbox-Decrypted/org/agenda.org"
-                          "~/Dropbox-Decrypted/org/home.org"
-                          "~/Dropbox-Decrypted/org/kubernetes.org"
-                          "~/Dropbox-Decrypted/org/omnia.org"
-                          "~/Dropbox-Decrypted/org/personal-projects.org"
-                          "~/Dropbox-Decrypted/org/technology.org"
-                          "~/Dropbox-Decrypted/org/todo.org"
-                          "~/Dropbox-Decrypted/org/work.org")))
+  (("C-c a" . org-agenda)
+   ("C-c c" . org-capture))
 
-(use-package org-pomodoro
-  :ensure t)
+  :hook (org-mode . visual-line-mode)
+  :config
+  (setq org-src-tab-acts-natively nil)
+  (defun jb/org-narrow-to-parent ()
+    "Narrow buffer to the current subtree."
+    (interactive)
+    (widen)
+    (org-up-element)
+    (save-excursion
+      (save-match-data
+        (org-with-limited-levels
+         (narrow-to-region
+          (progn
+            (org-back-to-heading t) (point))
+          (progn (org-end-of-subtree t t)
+                 (when (and (org-at-heading-p) (not (eobp))) (backward-char 1))
+                 (point)))))))
+
+  (defun jb/org-clear-results ()
+    (interactive)
+    (org-babel-remove-result-one-or-many 't))
+
+  (defun run-org-block ()
+    (interactive)
+    (save-excursion
+      (goto-char
+       (org-babel-find-named-block
+        (completing-read "Code Block: " (org-babel-src-block-names))))
+      (org-babel-execute-src-block-maybe)))
+
+  (if (file-exists-p "~/Dropbox-Decrypted/org")
+      (setq org-directory "~/Dropbox-Decrypted/org")
+    (setq org-directory "~/org"))
+  (setq org-agenda-files (list
+                          (concat org-directory "/agenda.org")
+                          (concat org-directory "/work/calendar.org")
+                          (concat org-directory "/work/tasks.org")
+                          (concat org-directory "/personal/calendar.org")
+                          (concat org-directory "/personal/tasks.org"))
+
+        org-todo-keywords
+        '((sequence "TODO(t)" "INPROGRESS(i)" "|" "DONE(d)")
+          ("WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))
+
+        org-todo-keyword-faces
+        '(("TODO" :foreground "red" :weight regular)
+          ("INPROGRESS" :foreground "blue" :weight regular)
+          ("DONE" :foreground "forest green" :weight regular)
+          ("WAITING" :foreground "orange" :weight regular)
+          ("BLOCKED" :foreground "magenta" :weight regular)
+          ("CANCELLED" :foreground "forest green" :weight regular))
+        org-log-into-drawer 't
+        org-startup-truncated nil
+        org-default-notes-file (concat org-directory "/notes.org")
+        org-export-html-postamble nil
+        org-hide-leading-stars 't
+        org-startup-folded 'overview
+        org-startup-indented 't)
+  ;; Add ts language support
+  (add-to-list 'org-src-lang-modes '("tsx" . tsx-ts))
+  (add-to-list 'org-src-lang-modes '("typescript" . typescript-ts))
+  (add-to-list 'org-src-lang-modes '("jsx" . jsx-ts))
+  (add-to-list 'org-src-lang-modes '("javascript" . javascript-ts))
+  (add-to-list 'org-src-lang-modes '("ruby" . ruby-ts))
+  (add-to-list 'org-src-lang-modes '("dot" . graphviz-dot))
+  (run-at-time "1 min" nil (lambda ()
+                             (org-babel-do-load-languages 'org-babel-load-languages
+                                                          '((shell . t)
+                                                            (dot . t)
+                                                            (js . t)
+                                                            (sql . t)
+                                                            (python . t)
+                                                            (ruby . t))))))
+
+(use-package org-pdftools
+  :ensure t
+  :after org)
+
+(use-package toc-org
+  :ensure t
+  :hook (org-mode . toc-org-mode))
+
+(use-package org-modern
+  :ensure t
+  :hook (org-mode . org-modern-mode))
+
+(use-package org-ref
+  :ensure t
+  )
+
 
 
 (defun org-roam-node-insert-immediate (arg &rest args)
@@ -1346,6 +1411,98 @@
 (defun mla/org-roam-refresh-agenda-list ()
   (interactive)
   (setq org-agenda-files))
+
+(use-package org-agenda
+  :config
+  (defun air-org-skip-subtree-if-priority (priority)
+    "Skip an agenda subtree if it has a priority of PRIORITY.
+
+PRIORITY may be one of the characters ?A, ?B, or ?C."
+    (let ((subtree-end (save-excursion (org-end-of-subtree t)))
+          (pri-value (* 1000 (- org-lowest-priority priority)))
+          (pri-current (org-get-priority (thing-at-point 'line t))))
+      (if (= pri-value pri-current)
+          subtree-end
+        nil)))
+  ;; (setq initial-buffer-choice (lambda () (org-agenda nil "d")
+  ;;                               (buffer-find "*Org Agenda*")))
+  (setq org-agenda-window-setup 'only-window
+        org-agenda-custom-commands
+        '(("d" "Today"
+           ((tags-todo "SCHEDULED<\"<+1d>\"&PRIORITY=\"A\"" ;Priority tasks available to do today
+                       ((org-agenda-skip-function
+                         '(org-agenda-skip-entry-if 'todo 'done))
+                        (org-agenda-overriding-header "High-priority unfinished tasks:")))
+            (agenda "" ((org-agenda-span 'day)
+                        (org-scheduled-delay-days -14)
+                        (org-agenda-overriding-header "Schedule")))
+            (tags-todo "SCHEDULED<\"<+1d>\"" ;All tasks available today
+                       ((org-agenda-skip-function
+                         '(or (org-agenda-skip-entry-if 'done)
+                              (air-org-skip-subtree-if-priority ?A)))
+                        (org-agenda-overriding-header "Tasks:"))))))))
+
+(use-package elegant-agenda-mode
+  :ensure t
+  :hook (org-agenda-mode . elegant-agenda-mode))
+
+(use-package org-alert
+  :ensure t)
+
+(use-package doct
+  :ensure t
+  :after org
+  :commands (doct)
+  :init (setq org-capture-templates
+              (doct `(("Personal" :keys "p" :children
+                       (("Todo"   :keys "t"
+                         :template ("* TODO %^{Description}"
+                                    "SCHEDULED: %U")
+                         :headline "Tasks" :file ,(concat org-directory "/personal/tasks.org"))
+                        ("Notes"  :keys "n"
+                         :template ("* %^{Description}"
+                                    ":PROPERTIES:"
+                                    ":Created: %U"
+                                    ":END:")
+                         :headline "Notes" :file ,(concat org-directory "/personal/tasks.org"))
+                        ("Appointment"  :keys "a"
+                         :template ("* %^{Description}"
+                                    "SCHEDULED: %T"
+                                    ":PROPERTIES:"
+                                    ":calendar-id: justincbarclay@gmail.com"
+                                    ":END:")
+                                    :file ,(concat org-directory "/personal/calendar.org"))
+                        ("Emails" :keys "e"
+                         :template "* TODO [#A] Reply: %a :@home:"
+                         :headline "Emails" :file "~/org/personal/tasks.org")))
+
+                      ("Work"    :keys "w"
+                       :children
+                       (("Todo"  :keys "t"
+                         :template ("* TODO %^{Description}"
+                                    ":PROPERTIES:"
+                                    ":Scheduled: %U"
+                                    ":END:")
+                         :headline "Tasks" :file ,(concat org-directory "/work/tasks.org"))
+                        ("Notes"  :keys "n"
+                         :template ("* %^{Description}"
+                                    ":PROPERTIES:"
+                                    ":Created: %U"
+                                    ":END:")
+                         :headline "Notes" :file ,(concat org-directory "/work/tasks.org"))
+                        ("Emails" :keys "e"
+                         :template "* TODO [#A] Reply: %a :@work:"
+                         :headline "Emails" :file ,(concat org-directory "/work/tasks.org"))
+                        ("Trello" :keys "r"
+                         :template ("* TODO [#B] %a " "SCHEDULED: %U")
+                         :headline "Tasks" :file ,(concat org-directory "/work/tasks.org"))
+                        ("Appointment"  :keys "a"
+                         :template ("* %^{Description}"
+                                    "SCHEDULED: %T"
+                                    ":PROPERTIES:"
+                                    ":calendar-id: justin.barclay@tidalcloud.com"
+                                    ":END:")
+                         :file ,(concat org-directory "/work/calendar.org"))))))))
 
 (use-package org-roam
   :ensure t
