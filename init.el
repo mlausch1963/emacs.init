@@ -1265,7 +1265,6 @@
   :ensure t
   :init (treemacs-set-scope-type 'Frames))
 
-
 (use-package ein
   :ensure t
   :commands (ein:notebooklist-open)
@@ -1843,6 +1842,7 @@ PRIORITY may be one of the characters ?A, ?B, or ?C."
 (use-package gitlab-ci-mode
   :ensure t
   :after lsp-mode
+  :commands (lsp lsp-deferred)
   :init (progn
           (add-to-list 'lsp-language-id-configuration '(gitlab-ci-mode . "yaml"))
           (lsp-register-client
@@ -1855,8 +1855,6 @@ PRIORITY may be one of the characters ?A, ?B, or ?C."
                             :remote? t
                             :after-open-fn (lambda ()
                                              (setq-local lsp-completion-filter-on-incomplete nil))))
-          :commands (lsp lsp-deferred)
-
           (lsp-register-client
            (make-lsp-client :new-connection (lsp-stdio-connection
                                              (lambda ()
@@ -1873,6 +1871,7 @@ PRIORITY may be one of the characters ?A, ?B, or ?C."
                             :download-server-fn (lambda (_client callback error-callback _update?)
                                                   (lsp-package-ensure 'yaml-language-server
                                                                       callback error-callback))))))
+
 
 
 (use-package treesit-auto
