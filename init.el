@@ -1842,7 +1842,7 @@ PRIORITY may be one of the characters ?A, ?B, or ?C."
 (use-package gitlab-ci-mode
   :ensure t
   :after lsp-mode
-  :commands (lsp lsp-deferred)
+  :commands '(lsp lsp-deferred)
   :init (progn
           (add-to-list 'lsp-language-id-configuration '(gitlab-ci-mode . "yaml"))
           (lsp-register-client
