@@ -1,3 +1,5 @@
+/projects
+/modules
 /.cache
 /.lsp-session-v1
 /bookmarks
@@ -34,3 +36,4 @@
 /tree-sitter/
 /eln-cache/
 /tramp
+/ellama-sessions/

@@ -464,9 +464,15 @@
   :bind (("s-g" . magit-status))
   :commands magit-status)
 
+(use-package gtea
+  :ensure t)
+
+(use-package gogs
+  :ensure t)
+
 (use-package forge
-  :ensure t
-  :after magit)
+  :after '(gtea gogs);; broken depdency from forge to gtea
+  :ensure t)
 
 
 (use-package salt-mode
@@ -1842,36 +1848,8 @@ PRIORITY may be one of the characters ?A, ?B, or ?C."
 (use-package gitlab-ci-mode
   :ensure t
   :after lsp-mode
-  :commands '(lsp lsp-deferred)
-  :init (progn
-          (add-to-list 'lsp-language-id-configuration '(gitlab-ci-mode . "yaml"))
-          (lsp-register-client
-           (make-lsp-client :new-connection (lsp-tramp-connection
-                                             (lambda () '("gh-solargraph" "stdio")))
-                            :major-modes '(ruby-mode)
-                            :language-id "ruby"
-                            :priority -2
-                            :server-id 'remote-solargraph-lsp
-                            :remote? t
-                            :after-open-fn (lambda ()
-                                             (setq-local lsp-completion-filter-on-incomplete nil))))
-          (lsp-register-client
-           (make-lsp-client :new-connection (lsp-stdio-connection
-                                             (lambda ()
-                                               `(,(or (executable-find (cl-first lsp-yaml-server-command))
-                                                      (lsp-package-path 'yaml-language-server))
-                                                 ,@(cl-rest lsp-yaml-server-command))))
-                            :major-modes '(gitlab-ci-mode)
-                            :priority 0
-                            :server-id 'yamlci
-                            :initialized-fn (lambda (workspace)
-                                              (with-lsp-workspace workspace
-                                                                  (lsp--set-configuration
-                                                                   (lsp-configuration-section "yaml"))))
-                            :download-server-fn (lambda (_client callback error-callback _update?)
-                                                  (lsp-package-ensure 'yaml-language-server
-                                                                      callback error-callback))))))
-
+  :mode
+  ("\\.gitlab-ci.yaml\\'" "\\.gitlab-ci.yml\\'"))
 
 
 (use-package treesit-auto
@@ -1972,6 +1950,7 @@ before we send our 'ok' to the SessionManager."
 ;;
 ;; See https://gitlab.com/arvidnl/magit-gitlab
 ;; fpr more information
+
 (use-package magit-gitlab
   :ensure t
   :config
@@ -1986,7 +1965,6 @@ before we send our 'ok' to the SessionManager."
 (use-package jwt
   :ensure t)
 
-<<<<<<< HEAD
 (use-package ellama
   :ensure t
   :init
@@ -2041,6 +2019,7 @@ before we send our 'ok' to the SessionManager."
 
 ;; Enable repeat mode for more ergonomic `dape' use
 (use-package repeat
+  :ensure t
   :config
   (repeat-mode))
 
@@ -2052,5 +2031,8 @@ before we send our 'ok' to the SessionManager."
   (setopt ellama-provider
           (make-llm-ollama
            :chat-model "codellama:34b" :embedding-model "codellama:34b")))
+
+(use-package aidev-mode
+  :ensure t)
 
 ;;; init.el ends here
