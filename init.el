@@ -33,6 +33,9 @@
 ;;; Code:
 
 
+(set-default-toplevel-value 'lexical-binding t)
+
+
 (when (version< emacs-version "29.1")
   (error "Mla requires GNU Emacs 29.1 or newer, but you're running %s" emacs-version))
 
@@ -40,7 +43,6 @@
   (getenv
    (if (equal system-type 'windows-nt) "USERNAME" "USER")))
 (message "Mla is powering up... Be patient, Master %s!" current-user)
-
 
 (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
 
@@ -277,7 +279,7 @@
 
 
 ;; revert buffers automatically when underlying files are changed externally
-(global-auto-revert-mode t)
+;(global-auto-revert-mode t)
 
 (prefer-coding-system 'utf-8)
 (set-default-coding-systems 'utf-8)
@@ -1039,11 +1041,16 @@
   :interpreter ("python3" . python-mode)
   :mode (("\\.py\\'" . python-mode)))
 
+(use-package elpy
+  :ensure t
+  :init
+  (elpy-enable))
+
 (use-package pyvenv
   :ensure t
   :defer t
   :diminish
-  :after (python-ts-mode python-mode)
+;;  :after (python-ts-mode python-mode)
   :config
   (pyvenv-mode t)
   (add-hook 'python-ts-mode-hook  #'pyvenv-tracking-mode)
@@ -2032,7 +2039,22 @@ before we send our 'ok' to the SessionManager."
           (make-llm-ollama
            :chat-model "codellama:34b" :embedding-model "codellama:34b")))
 
+(use-package aidermacs
+  :bind (("C-c a" . aidermacs-transient-menu))
+  :config
+
+  (setenv "OLLAMA_API_BASE" "http://localhost:11434")
+  :custom
+  ; See the Configuration section below
+  (aidermacs-default-chat-mode 'architect)
+  (aidermacs-default-model "ollama/gemma3:latest"))
+
+
 (use-package aidev-mode
   :ensure t)
 
+(use-package mason
+  :ensure t
+  :config
+  (mason-ensure))
 ;;; init.el ends here
