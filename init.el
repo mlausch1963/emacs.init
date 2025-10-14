@@ -1146,6 +1146,7 @@
   (require 'dap-gdb-lldb)
   (require 'dap-dlv-go)
   (require 'dap-hydra)
+  (require 'dap-python)
   (dap-ui-mode 1)
   (dap-tooltip-mode 1)
   (dap-ui-controls-mode 1)
