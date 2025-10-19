@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; inirt.el --- Mu emacs init file.
 ;;
 ;; Copyright (c) 2019 Michael Lausch
@@ -152,21 +153,39 @@
 
 (require 'package)
 
-(setq package-archives
-      '(("GNU ELPA"     . "https://elpa.gnu.org/packages/")
-        ("MELPA Stable" . "https://stable.melpa.org/packages/")
-        ("MELPA"        . "https://melpa.org/packages/")
-        ("jcs-elpa"     . "https://jcs-emacs.github.io/jcs-elpa/packages/")
-        ("org"          . "https://orgmode.org/elpa/"))
 
-      package-archive-priorities
-      '(("MELPA Stable" . 10)
-        ("GNU ELPA"     . 5)
-        ("org"          . 5)
-        ("jcs-elpa"     . 0)
-        ("MELPA"        . 20)
-        ))
+(add-to-list 'package-archives
+             '("melpa" . "http://melpa.org/packages/") t)
 
+;; (add-to-list 'package-archives
+;;              '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+
+;; (add-to-list 'package-archives
+;;              '("gnu" . "http://elpa.gnu.org/packages/"))
+;; (add-to-list 'package-archives
+;;              '("marmalade" . "https://marmalade-repo.org/packages/"))
+;; (add-to-list 'package-archives
+;;              '("org" . "http://orgmode.org/elpa/") t)
+;; (add-to-list 'package-archives
+;;              '("tromey" . "http://tromey.com/elpa/") t)
+
+
+;; (setq package-archives
+;;       '(("GNU ELPA"     . "https://elpa.gnu.org/packages/")
+;;         ("MELPA Stable" .
+;;         ("MELPA"        . "https://melpa.org/packages/")
+;;         ("jcs-elpa"     . "https://jcs-emacs.github.io/jcs-elpa/packages/"))
+;; ;;;        ("org"          . "https://orgmode.org/elpa/"))
+
+;;       package-archive-priorities
+;;       '(("MELPA Stable" . 10)
+;;         ("GNU ELPA"     . 5)
+;;         ("org"          . 5)
+;;         ("jcs-elpa"     . 0)
+;;         ("MELPA"        . 20)
+;;         ))
+
+()
 (package-initialize)
 
 ;; keep the installed packages in .emacs.d
