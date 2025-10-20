@@ -1158,7 +1158,8 @@
 
 (use-package dap-mode
   :ensure t
-  :after 'lsp-mode
+;;  :after 'lsp-mode
+  :commands dap-debug
   :config
   (require 'dap-cpptools)
   (require 'dap-lldb)
@@ -1169,26 +1170,27 @@
   (dap-ui-mode 1)
   (dap-tooltip-mode 1)
   (dap-ui-controls-mode 1)
+  (setq dap-python-debugger 'debugpy)
 
-  (dap-register-debug-template
-   "Rust::GDB Run Configuratrion"
-   (list :type "gdb"
-         :request "launch"
-         :name "GDB::Run"
-         :gdbpath "rust-gdb"
-         :target nil
-         :cwd (expand-file-name "~"))
+;;  (dap-register-debug-template
+ ;;  "Rust::GDB Run Configuratrion"
+  ;; (list :type "gdb"
+   ;;      :request "launch"
+    ;;     :name "GDB::Run"
+     ;;    :gdbpath "rust-gdb"
+      ;;   :target nil
+       ;;  :cwd (expand-file-name "~"))
 
-  (dap-register-debug-template
-   "Rust::LLDB Run Configuration"
-   (list :type "lldb"
-         :request "launch"
-         :name "LLDB::Run"
-         :target nil
-         :gdbpath "rust-lldb"
-            ))
+;;  (dap-register-debug-template
+ ;;  "Rust::LLDB Run Configuration"
+  ;; (list :type "lldb"
+   ;;      :request "launch"
+    ;;     :name "LLDB::Run"
+     ;;    :target nil
+      ;;   :gdbpath "rust-lldb"
+       ;;     ))
   :hook
-  (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra)))))
+  (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
 
 (use-package gud
   :ensure t)
@@ -2003,46 +2005,46 @@ before we send our 'ok' to the SessionManager."
 
 
 
-(use-package dape
-  :ensure t
+;; (use-package dape
+;;   :ensure t
 
-  :preface
-  ;; By default dape shares the same keybinding prefix as `gud'
-  ;; If you do not want to use any prefix, set it to nil.
-  ;; (setq dape-key-prefix "\C-x\C-a")
+;;   :preface
+;;   ;; By default dape shares the same keybinding prefix as `gud'
+;;   ;; If you do not want to use any prefix, set it to nil.
+;;   ;; (setq dape-key-prefix "\C-x\C-a")
 
-  ;;:hook
-  ;; Save breakpoints on quit
-  ;; ((kill-emacs . dape-breakpoint-save)
-  ;; Load breakpoints on startup
-  ;;  (after-init . dape-breakpoint-load))
+;;   ;;:hook
+;;   ;; Save breakpoints on quit
+;;   ;; ((kill-emacs . dape-breakpoint-save)
+;;   ;; Load breakpoints on startup
+;;   ;;  (after-init . dape-breakpoint-load))
 
-  :config
-  ;; Turn on global bindings for setting breakpoints with mouse
-  (dape-breakpoint-global-mode)
+;;   :config
+;;   ;; Turn on global bindings for setting breakpoints with mouse
+;;   (dape-breakpoint-global-mode)
 
-  ;; Info buffers to the right
-  ;; (setq dape-buffer-window-arrangement 'right)
+;;   ;; Info buffers to the right
+;;   ;; (setq dape-buffer-window-arrangement 'right)
 
-  ;; Info buffers like gud (gdb-mi)
-  (setq dape-buffer-window-arrangement 'gud)
-  (setq dape-info-hide-mode-line nil)
+;;   ;; Info buffers like gud (gdb-mi)
+;;   (setq dape-buffer-window-arrangement 'gud)
+;;   (setq dape-info-hide-mode-line nil)
 
-  ;; Pulse source line (performance hit)
-  (add-hook 'dape-display-source-hook 'pulse-momentary-highlight-one-line)
+;;   ;; Pulse source line (performance hit)
+;;   (add-hook 'dape-display-source-hook 'pulse-momentary-highlight-one-line)
 
-  ;; Showing inlay hints
-  (setq dape-inlay-hints t)
+;;   ;; Showing inlay hints
+;;   (setq dape-inlay-hints t)
 
-  ;; Save buffers on startup, useful for interpreted languages
-  ;; (add-hook 'dape-start-hook (lambda () (save-some-buffers t t)))
+;;   ;; Save buffers on startup, useful for interpreted languages
+;;   ;; (add-hook 'dape-start-hook (lambda () (save-some-buffers t t)))
 
-  ;; Kill compile buffer on build success
-  ;; (add-hook 'dape-compile-hook 'kill-buffer)
+;;   ;; Kill compile buffer on build success
+;;   ;; (add-hook 'dape-compile-hook 'kill-buffer)
 
-  ;; Projectile users
-  (setq dape-cwd-fn 'projectile-project-root)
-  )
+;;   ;; Projectile users
+;;   (setq dape-cwd-fn 'projectile-project-root)
+;;   )
 
 ;; Enable repeat mode for more ergonomic `dape' use
 (use-package repeat
