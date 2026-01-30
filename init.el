@@ -526,6 +526,24 @@
                kb/basic-remote-try-completion kb/basic-remote-all-completions nil))
 
 
+
+(defvar +vertico-current-arrow t)
+
+(cl-defmethod vertico--format-candidate :around
+  (cand prefix suffix index start &context ((and +vertico-current-arrow
+                                                 (not (bound-and-true-p vertico-flat-mode)))
+                                            (eql t)))
+  (setq cand (cl-call-next-method cand prefix suffix index start))
+  (if (bound-and-true-p vertico-grid-mode)
+      (if (= vertico--index index)
+          (concat #("▶" 0 1 (face vertico-current)) cand)
+        (concat #("_" 0 1 (display " ")) cand))
+    (if (= vertico--index index)
+        (concat
+         #(" " 0 1 (display (left-fringe right-triangle vertico-current)))
+         cand)
+      cand)))
+
 (use-package vertico
   :demand t
   :ensure t
@@ -595,18 +613,8 @@
   :config
   (vertico-mode)
   ;; Extensions
-  (vertico-multiform-mode)
+  (vertico-multiform-mode))
 
-  ;; Prefix the current candidate with “» ”. From
-  ;; https://github.com/minad/vertico/wiki#prefix-current-candidate-with-arrow
-  (advice-add #'vertico--format-candidate :around
-              (lambda (orig cand prefix suffix index _start)
-                (setq cand (funcall orig cand prefix suffix index _start))
-                (concat
-                 (if (= vertico--index index)
-                     (propertize "» " 'face 'vertico-current)
-                   "  ")
-                 cand))))
 
 (use-package marginalia
   :after vertico
@@ -2085,4 +2093,20 @@ before we send our 'ok' to the SessionManager."
   :ensure t
   :config
   (mason-ensure))
+
+(use-package ai-code
+  :config
+  ;; use codex as backend, other options are 'gemini, 'github-copilot-cli, 'opencode, 'grok, 'claude-code-ide, 'claude-code, 'cursor, 'kiro
+  (ai-code-set-backend 'codex)
+  ;; Enable global keybinding for the main menu
+  (global-set-key (kbd "C-c a") #'ai-code-menu)
+  ;; Optional: Use eat if you prefer, by default it is vterm
+  ;; (setq ai-code-backends-infra-terminal-backend 'eat) ;; for openai codex, github copilot cli, opencode, grok, cursor-cli; for claude-code-ide.el, you can check their config
+  ;; Optional: Turn on auto-revert buffer, so that the AI code change automatically appears in the buffer
+  (global-auto-revert-mode 1)
+  (setq auto-revert-interval 1) ;; set to 1 second for faster update
+  ;; Optional: Set up Magit integration for AI commands in Magit popups
+  (with-eval-after-load 'magit
+    (ai-code-magit-setup-transients)))
+
 ;;; init.el ends here
