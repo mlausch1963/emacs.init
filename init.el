@@ -343,13 +343,6 @@
 (use-package delight
   :ensure t)
 
-
-;;; TODO:
-;;; switch from comapny to corfu/capfs amd cape
-;;; https://www.reddit.com/r/emacs/comments/1oy6ddj/new_releases_of_consult_vertico_corfu_and_more/
-
-
-
 ;;; built-in packages
 (use-package paren
   :config
@@ -501,9 +494,6 @@
   :mode (("\\.sls\\'" . salt-mode)))
 
 
-
-
-
 (use-package consult
   :ensure t
   ;; Replace bindings. Lazily loaded due by `use-package'.
@@ -596,8 +586,8 @@
    consult-theme :preview-key '(:debounce 0.2 any)
    consult-ripgrep consult-git-grep consult-grep
    consult-bookmark consult-recent-file consult-xref
-   consult--source-bookmark consult--source-file-register
-   consult--source-recent-file consult--source-project-recent-file
+   consult-source-bookmark consult-source-file-register
+   consult-source-recent-file consult-source-project-recent-file
    :preview-key '(:debounce 0.4 any))
 
   ;; Optionally configure the narrowing key.
@@ -795,12 +785,9 @@
 (use-package emacs
   :custom
   ;;; vertico customization
-  (tab-always-indent 'complete)
-  (text-mode-ispell-word-completion nil)
-  (read-extended-command-predicate #'command-completion-default-include-p)
   (context-menu-mode t)
   (enable-recusive-minibuffers t)
-  (read-extended-command-predicate #'command-completion-delete-include-p)
+  (read-extended-command-predicate #'command-completion-default-include-p)
   (minibuffer-prompt-properties
    '(read-only t cursor-intangible t face minibuffer-prompt)))
 
@@ -1784,7 +1771,7 @@ PRIORITY may be one of the characters ?A, ?B, or ?C."
   (persp-state-default-file (expand-file-name "my-persp-save.el" mla-personal-dir))
   :config
   (add-to-list 'consult-buffer-sources persp-consult-source)
-  (consult-customize consult--source-buffer :hidden t :default nil)
+  (consult-customize consult-source-buffer :hidden t :default nil)
   :hook (kill-emacs . persp-state-save))
 
 
