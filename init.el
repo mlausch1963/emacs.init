@@ -34,6 +34,10 @@
 ;;; Code:
 
 
+;;; take a look at for more inspirations
+
+;;; https://github.com/MiniApollo/kickstart.emacs/blob/main/init.org
+
 (set-default-toplevel-value 'lexical-binding t)
 
 
