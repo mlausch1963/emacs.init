@@ -31,6 +31,12 @@
 
 ;; Source of inspiration: https://github.com/justinbarclay/.emacs.d
 
+;; improve helm editing with
+;; https://github.com/emacsmirror/poly-ansible/blob/master/lisp/poly-ansible.el
+;; as a starting point
+
+
+
 ;;; Code:
 
 
@@ -261,7 +267,7 @@
 (add-to-list 'major-mode-remap-alist '(python-mode . python-ts-mode))
 (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode))
 (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
-(add-to-list 'major-mode-remap-alist '(yaml-mode . yaml-ts-mode))
+;;(add-to-list 'major-mode-remap-alist '(yaml-mode . yaml-ts-mode))
 
 (use-package compat
 	     :ensure t)
@@ -982,23 +988,43 @@
   :ensure t)
 
 (defun mla/fix-yaml-ts-indent ()
-  (setq-local indent-line-function #'yaml-indent-line))
+  (keymap-local-set "RET" #'newline-and-indent)
+  (keymap-local-set "-" #'yaml-electric-dash-and-dot)
+  (keymap-local-set "." #'yaml-electric-dash-and-dot)
+  (keymap-local-set ">" #'yaml-electric-bar-and-angle)
+  (keymap-local-set "|" #'yaml-electric-var-and-angle)
+  (keymap-local-set "DEL" #'yaml-electric-backspace))
+
 
 (use-package yaml-mode
   :ensure t
-  :init
-  (require 'yaml-ts-mode)
   :config
+  (message "Setting up yaml-mode")
+;;  (require 'yaml-ts-mode)
+;;  (add-hook 'yaml-ts-mode-hook #'mla/fix-yaml-ts-indent)
+;;  (add-hook 'yaml-ts-mode-hook #'display-line-numbers-mode)
+;;  (add-hook 'yaml-ts-mode-hook #'highlight-indentation-mode)
   (add-hook 'yaml-mode-hook #'display-line-numbers-mode)
   (add-hook 'yaml-mode-hook #'highlight-indentation-mode)
-  (add-hook 'yaml-ts-mode-hook #'mla/fix-yaml-ts-indent)
-  (add-hook 'yaml-ts-mode-hook #'display-line-numbers-mode)
-  (add-hook 'yaml-ts-mode-hook #'highlight-indentation-mode)
   :bind
-  (:map yaml-ts-mode-map
-        ("\C-m" . newline-and-indent))
   (:map yaml-mode-map
-        ("\C-m" . newline-and-indent)))
+        ("RET" . newline-and-indent)))
+
+(defun my/go-template-helper-enable ()
+    "Enable go-template-helper-mode when appropriate.
+  Activates `go-template-helper-mode' if the buffer's file is located in a
+  templates/ directory and has a .yaml, .yml, or .tpl extension."
+    (when (and buffer-file-name
+               (string-match-p
+                "/templates/.*\\(?:\\.ya?ml\\|\\.tpl\\)\\'"
+                buffer-file-name))
+      (require 'go-template-helper-mode)
+      (go-template-helper-mode 1)))
+
+
+(use-package go-template-helper-mode
+  :ensure t
+  :hook (yaml-mode . my/go-template-helper-enable))
 
 
 (if (executable-find "rg")
@@ -1142,10 +1168,10 @@
     (and (eq index 0) 'oderless-flex))
 
   (defun my/lsp-mode-setup-completion ()
-    (setf (alist-0get 'styles (alist-get 'lsp-capf completion-category-defaults))
+    (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless))
-    (setq-local oderless-style-dispatchers (list #'my/orderless-dipatch-flex-first))
-    (setq-local completion-at-point-function (list cape-capf-buster #'lsp-completion-at-point)))
+    (setq-local oderless-style-dispatchers (list #'my/orderless-dipatch-flex-first)))
+;;;    (setq-local completion-at-point-function (list cape-capf-buster #'lsp-completion-at-point)))
 
   :config
   (message "lsp-mode loaded")
@@ -1161,8 +1187,8 @@
          (ruby-ts-mode . lsp)
          (js-mode . lsp)
          (javascript-mode . lsp)
-         (yaml-mode . lsp-deferred)
-         (yaml-ts-mode . lsp-deferred)
+         ;; (yaml-mode . lsp-deferred)
+         ;; (yaml-ts-mode . lsp-deferred)
          (typescript-mode . lsp)
          (web-mode . lsp)
          (c-mode . lsp)
@@ -1924,7 +1950,7 @@ PRIORITY may be one of the characters ?A, ?B, or ?C."
   :ensure t
   :config
   (setq treesit-auto-install 'prompt)
-  (setq yaml-ts-mode-hook yaml-mode-hook)
+;;  (setq yaml-ts-mode-hook yaml-mode-hook)
   (global-treesit-auto-mode))
 
 (use-package sly
