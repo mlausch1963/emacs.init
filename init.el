@@ -802,8 +802,6 @@
    '(read-only t cursor-intangible t face minibuffer-prompt)))
 
 
-;; Example configuration for Consult
-
 (use-package embark
   :ensure t
   :after projectile
@@ -820,7 +818,7 @@
   :config
 
   ;; Hide the mode line of the Embark live/completions buffers
-  (add-to-list 'display-buffer-projectile-alist
+  (add-to-list 'display-buffer-alist
                '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
                  nil
                  (window-parameters (mode-line-format . none)))))
@@ -1171,8 +1169,6 @@
     (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
           '(orderless))
     (setq-local oderless-style-dispatchers (list #'my/orderless-dipatch-flex-first)))
-;;;    (setq-local completion-at-point-function (list cape-capf-buster #'lsp-completion-at-point)))
-
   :config
   (message "lsp-mode loaded")
   (setq lsp-prefer-flymake nil
@@ -1380,7 +1376,6 @@
 (use-package json-mode
   :ensure t
   :mode (("\\.json\\'" . json-mode)))
-
 
 
 (use-package goggles
@@ -1711,12 +1706,6 @@ PRIORITY may be one of the characters ?A, ?B, or ?C."
 
 (put 'erase-buffer 'disabled nil)1
 
-(use-package goggles
-  :demand t
-  :ensure t
-  :config
-  (goggles-mode)
-  (setq-default goggles-pulse t)) ;; set to nil to disable pulsing
 
 (use-package monkeytype
   :demand t
@@ -2053,17 +2042,6 @@ before we send our 'ok' to the SessionManager."
 (use-package jwt
   :ensure t)
 
-(use-package ellama
-  :ensure t
-  :init
-  (setopt ellama-language "English")
-  (require 'llm-ollama)
-  (setopt ellama-provider
-          (make-llm-ollama
-           :chat-model "qwen2.5-coder:32b" :embedding-model "qwen2.5-coder:32b")))
-
-
-
 ;; (use-package dape
 ;;   :ensure t
 
@@ -2120,38 +2098,38 @@ before we send our 'ok' to the SessionManager."
           (make-llm-ollama
            :chat-model "codellama:34b" :embedding-model "codellama:34b")))
 
-(use-package aidermacs
-  :bind (("C-c a" . aidermacs-transient-menu))
-  :config
+;; (use-package aidermacs
+;;   :bind (("C-c a" . aidermacs-transient-menu))
+;;   :config
 
-  (setenv "OLLAMA_API_BASE" "http://localhost:11434")
-  :custom
-  ; See the Configuration section below
-  (aidermacs-default-chat-mode 'architect)
-  (aidermacs-default-model "ollama/gemma3:latest"))
+;;   (setenv "OLLAMA_API_BASE" "http://localhost:11434")
+;;   :custom
+;;   ; See the Configuration section below
+;;   (aidermacs-default-chat-mode 'architect)
+;;   (aidermacs-default-model "ollama/gemma3:latest"))
 
 
-(use-package aidev-mode
-  :ensure t)
+;; (use-package aidev-mode
+;;   :ensure t)
 
 (use-package mason
   :ensure t
   :config
   (mason-ensure))
 
-(use-package ai-code
-  :config
-  ;; use codex as backend, other options are 'gemini, 'github-copilot-cli, 'opencode, 'grok, 'claude-code-ide, 'claude-code, 'cursor, 'kiro
-  (ai-code-set-backend 'codex)
-  ;; Enable global keybinding for the main menu
-  (global-set-key (kbd "C-c a") #'ai-code-menu)
-  ;; Optional: Use eat if you prefer, by default it is vterm
-  ;; (setq ai-code-backends-infra-terminal-backend 'eat) ;; for openai codex, github copilot cli, opencode, grok, cursor-cli; for claude-code-ide.el, you can check their config
-  ;; Optional: Turn on auto-revert buffer, so that the AI code change automatically appears in the buffer
-  (global-auto-revert-mode 1)
-  (setq auto-revert-interval 1) ;; set to 1 second for faster update
-  ;; Optional: Set up Magit integration for AI commands in Magit popups
-  (with-eval-after-load 'magit
-    (ai-code-magit-setup-transients)))
+;; (use-package ai-code
+;;   :config
+;;   ;; use codex as backend, other options are 'gemini, 'github-copilot-cli, 'opencode, 'grok, 'claude-code-ide, 'claude-code, 'cursor, 'kiro
+;;   (ai-code-set-backend 'codex)
+;;   ;; Enable global keybinding for the main menu
+;;   (global-set-key (kbd "C-c a") #'ai-code-menu)
+;;   ;; Optional: Use eat if you prefer, by default it is vterm
+;;   ;; (setq ai-code-backends-infra-terminal-backend 'eat) ;; for openai codex, github copilot cli, opencode, grok, cursor-cli; for claude-code-ide.el, you can check their config
+;;   ;; Optional: Turn on auto-revert buffer, so that the AI code change automatically appears in the buffer
+;;   (global-auto-revert-mode 1)
+;;   (setq auto-revert-interval 1) ;; set to 1 second for faster update
+;;   ;; Optional: Set up Magit integration for AI commands in Magit popups
+;;   (with-eval-after-load 'magit
+;;     (ai-code-magit-setup-transients)))
 
 ;;; init.el ends here
