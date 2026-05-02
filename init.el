@@ -170,8 +170,8 @@
 (add-to-list 'package-archives
             '("org" . "http://orgmode.org/elpa/") t)
 
-(add-to-list 'package-archives
-	    '("jcs-elpa" . "https://jcs-emacs.github.io/jcs-elpa/packages/") t)
+;;(add-to-list 'package-archives
+	    ;;'("jcs-elpa" . "https://jcs-emacs.github.io/jcs-elpa/packages/") t)
 
 ;; (add-to-list 'package-archives
 ;;              '("melpa-stable" . "https://stable.melpa.org/packages/") t)
@@ -342,9 +342,14 @@
 (recentf-mode 1)
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
 (add-hook 'rst-mode-hook 'display-line-numbers-mode)
-(add-hook 'salt-mode-hook 'display-line-numbers-mode)
 (add-hook 'prog-mode-hook 'hl-line-mode)
 
+(use-package edit-server
+  :ensure t
+  :if window-system
+  :config
+  (add-hook 'after-init-hook 'server-start t)
+  (add-hook 'after-init-hook 'edit-server-start t))
 
 
 (use-package diminish
@@ -431,12 +436,6 @@
   ;; enable some really cool extensions like C-x C-j(dired-jump)
   (require 'dired-x))
 
-(use-package edit-server
-  :ensure t
-  :if window-system
-  :config
-  (add-hook 'after-init-hook 'server-start t)
-  (add-hook 'after-init-hook 'edit-server-start t))
 
 (use-package which-key
   :ensure t
@@ -2089,14 +2088,14 @@ before we send our 'ok' to the SessionManager."
   :config
   (repeat-mode))
 
-(use-package ellama
-  :ensure t
-  :init
-  (setopt ellama-language "English")
-  (require 'llm-ollama)
-  (setopt ellama-provider
-          (make-llm-ollama
-           :chat-model "codellama:34b" :embedding-model "codellama:34b")))
+;(use-package ellama
+;  :ensure t
+;  :init
+;  (setopt ellama-language "English")
+;  (require 'llm-ollama)
+;  (setopt ellama-provider
+;          (make-llm-ollama
+;           :chat-model "codellama:34b" :embedding-model "codellama:34b")))
 
 ;; (use-package aidermacs
 ;;   :bind (("C-c a" . aidermacs-transient-menu))
