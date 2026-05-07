@@ -272,8 +272,8 @@
 (use-package compat
 	     :ensure t)
 
-(use-package all-the-icons
-  :ensure t)
+;(use-package all-the-icons
+;  :ensure t)
 
 (use-package doom-modeline
   :ensure t
@@ -784,12 +784,21 @@
   :init
   (marginalia-mode))
 
-(use-package all-the-icons-completion
+(use-package nerd-icons-completion
+  :after marginalia
   :ensure t
-  :after (marginalia all-the-icons)
-  :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
-  :init
-  (all-the-icons-completion-mode))
+  :config
+  (nerd-icons-completion-mode)
+  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
+
+
+
+;(use-package all-the-icons-completion
+;  :ensure t
+;  :after (marginalia all-the-icons)
+;  :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+;  :init
+;  (all-the-icons-completion-mode))
 
 (use-package emacs
   :custom
@@ -1960,11 +1969,12 @@ PRIORITY may be one of the characters ?A, ?B, or ?C."
   (if (not (member "--stdio" lsp-rust-gopls-server-args))
       (append lsp-go-gopls-server-args '("--stdio"))))
 
-(use-package all-the-icons-nerd-fonts
-  :after all-the-icons
-  :ensure t
-  :config
-  (all-the-icons-nerd-fonts-prefer))
+;(use-package all-the-icons-nerd-fonts
+;  :after all-the-icons
+;  :ensure t
+;  :demand t
+ ; :config
+;  (all-the-icons-nerd-fonts-prefer))
 
 (use-package jinx
   :init
