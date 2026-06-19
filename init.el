@@ -123,8 +123,10 @@
         (mla-add-subfolders-to-load-path name)))))
 
 ;; add Mla's directories to Emacs's `load-path'
+(add-to-list 'load-path mla-personal-dir)
 (add-to-list 'load-path mla-core-dir)
 (add-to-list 'load-path mla-modules-dir)
+
 (if (file-exists-p mla-vendor-dir)
   (progn
     (add-to-list 'load-path mla-vendor-dir)
@@ -215,7 +217,7 @@
   (package-install 'use-package))
 
 (require 'bind-key)
-
+(require 'searchkeys)
                                         ; This is only needed once, near the top of the file
 (eval-when-compile
   ;; Following line is not needed if use-package.el is in ~/.emacs.d
@@ -1826,8 +1828,8 @@ PRIORITY may be one of the characters ?A, ?B, or ?C."
   :mode (("\\.adoc\\'" . adoc-mode)))
 
 (use-package swiper
-  :ensure t
-  :bind (("C-s" . swiper)))
+  :ensure t)
+
 
 (use-package bufler
   :ensure t
@@ -2125,6 +2127,17 @@ before we send our 'ok' to the SessionManager."
   :ensure t
   :config
   (mason-ensure))
+
+(use-package nameless
+  :hook (emacs-lisp-mode . nameless-mode)
+  :config
+  (setq nameless-private-prefix t)
+  :ensure t)
+
+(use-package mla-tools
+  :ensure nil  ; Tell use-package NOT to look on ELPA/MELPA for this
+  :bind ("C-c q" . mla-tools-quote-char-at-point))
+
 
 ;; (use-package ai-code
 ;;   :config

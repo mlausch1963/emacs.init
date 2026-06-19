@@ -9,7 +9,6 @@
 /auto-save-list/.saves-1966-loki.home.lausch.at~
 *~
 /elpa
-/personal
 /projectile-bookmarks.eld
 /request
 /savefile
@@ -39,3 +38,7 @@
 /eln-cache/
 /tramp
 /ellama-sessions/
+/personal/tree-sitter-indent.el/
+/personal/ts-modes.el
+/personal/searchkeys.el
+/personal/custom.el
