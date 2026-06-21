@@ -1,0 +1,67 @@
+# ==============================================================================
+# 🐧 LINUX & WINDOW OPTIONS
+# ==============================================================================
+# Native Linux styling using GTK/Libadwaita mechanisms
+window-decoration = true
+window-theme = dark
+window-padding-x = 10
+window-padding-y = 10
+window-padding-balance = true
+focus-follows-mouse = true
+
+# Perfect visual balance for background themes
+theme = "Solarized Dark Higher Contrast"
+background-opacity = 1
+background-blur = true
+
+# ==============================================================================
+# ⚡ SHELL & BASH INTEGRATION
+# ==============================================================================
+# Forces Ghostty to load your shell environment cleanly
+command = /bin/bash --login
+
+# Enables native features (directory tracking, cursor changes, jump to prompt)
+shell-integration = bash
+shell-integration-features = sudo
+# Fixes remote SSH environments automatically mapping to Ghostty terminfo
+shell-integration-features = ssh-terminfo
+shell-integration-features = cursor
+
+
+# ==============================================================================
+# 🎨 POWERLINE & TYPOGRAPHY
+# ==============================================================================
+# Set your preferred Nerd/Powerline font (Ensure it's installed on your system)
+font-family = "Fira Code Medium"
+font-size = 11
+font-thicken = true
+
+# Crucial Ghostty feature: Prevents custom prompt segments from misaligning
+adjust-cell-height = 12%
+adjust-cursor-height = 0
+
+# Hide mouse instantly when you start typing your commands
+mouse-hide-while-typing = true
+cursor-style = bar
+adjust-cursor-thickness = 7
+cursor-style-blink = false
+
+# ==============================================================================
+# 🪟 ADVANCED SPLITTING KEYBINDS (Linux Optimized)
+# ==============================================================================
+# Clear default overrides if needed and map efficient multiplexer bindings
+
+keybind = ctrl+alt+v=new_split:right
+keybind = ctrl+alt+h=new_split:down
+
+# Navigate between active split panes seamlessly (Note: requires up/down, not top/bottom)
+#keybind = ctrl+alt+left=goto_split:left
+#keybind = ctrl+alt+right=goto_split:right
+#keybind = ctrl+alt+up=goto_split:up
+#keybind = ctrl+alt+down=goto_split:down
+
+# Resize panes via keyboard
+keybind = ctrl+alt+shift+left=resize_split:left,20
+keybind = ctrl+alt+shift+right=resize_split:right,20
+keybind = ctrl+alt+shift+up=resize_split:up,20
+keybind = ctrl+alt+shift+down=resize_split:down,20
