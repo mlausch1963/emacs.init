@@ -271,8 +271,285 @@
 (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
 ;;(add-to-list 'major-mode-remap-alist '(yaml-mode . yaml-ts-mode))
 
+
+(use-package org
+  :ensure t
+  :bind
+  (("C-c a" . org-agenda)
+   ("C-c c" . org-capture))
+
+  :hook (org-mode . visual-line-mode)
+  :config
+  (setq org-src-tab-acts-natively nil)
+  (defun jb/org-narrow-to-parent ()
+    "Narrow buffer to the current subtree."
+    (interactive)
+    (widen)
+    (org-up-element)
+    (save-excursion
+      (save-match-data
+        (org-with-limited-levels
+         (narrow-to-region
+          (progn
+            (org-back-to-heading t) (point))
+          (progn (org-end-of-subtree t t)
+                 (when (and (org-at-heading-p) (not (eobp))) (backward-char 1))
+                 (point)))))))
+
+  (defun jb/org-clear-results ()
+    (interactive)
+    (org-babel-remove-result-one-or-many 't))
+
+  (defun run-org-block ()
+    (interactive)
+    (save-excursion
+      (goto-char
+       (org-babel-find-named-block
+        (completing-read "Code Block: " (org-babel-src-block-names))))
+      (org-babel-execute-src-block-maybe)))
+
+  (if (file-exists-p "~/Dropbox-Decrypted/org")
+      (setq org-directory "~/Dropbox-Decrypted/org")
+    (setq org-directory "~/org"))
+  (setq org-agenda-files (list
+                          (concat org-directory "/agenda.org")
+                          (concat org-directory "/work/calendar.org")
+                          (concat org-directory "/work/tasks.org")
+                          (concat org-directory "/personal/calendar.org")
+                          (concat org-directory "/personal/tasks.org"))
+
+        org-todo-keywords
+        '((sequence "TODO(t)" "INPROGRESS(i)" "|" "DONE(d)")
+          ("WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))
+
+        org-todo-keyword-faces
+        '(("TODO" :foreground "red" :weight regular)
+          ("INPROGRESS" :foreground "blue" :weight regular)
+          ("DONE" :foreground "forest green" :weight regular)
+          ("WAITING" :foreground "orange" :weight regular)
+          ("BLOCKED" :foreground "magenta" :weight regular)
+          ("CANCELLED" :foreground "forest green" :weight regular))
+        org-log-into-drawer 't
+        org-startup-truncated nil
+        org-default-notes-file (concat org-directory "/notes.org")
+        org-export-html-postamble nil
+        org-hide-leading-stars 't
+        org-startup-folded 'overview
+        org-startup-indented 't)
+  ;; Add ts language support
+  (add-to-list 'org-src-lang-modes '("tsx" . tsx-ts))
+  (add-to-list 'org-src-lang-modes '("typescript" . typescript-ts))
+  (add-to-list 'org-src-lang-modes '("jsx" . jsx-ts))
+  (add-to-list 'org-src-lang-modes '("javascript" . javascript-ts))
+  (add-to-list 'org-src-lang-modes '("ruby" . ruby-ts))
+  (add-to-list 'org-src-lang-modes '("dot" . graphviz-dot))
+  (run-at-time "2 min" nil (lambda ()
+                             (org-babel-do-load-languages 'org-babel-load-languages
+                                                          '((shell . t)
+                                                            (dot . t)
+                                                            (js . t)
+                                                            (sql . t)
+                                                            (python . t)
+                                                            (ruby . t))))))
+
+;(use-package org-pdftools
+;  :ensure t
+;  :after org)
+
+(use-package toc-org
+  :ensure t
+  :hook (org-mode . toc-org-mode))
+
+(use-package org-modern
+  :ensure t
+  :hook (org-mode . org-modern-mode))
+
+(use-package org-ref
+  :ensure t
+  )
+
+
+
+(defun org-roam-node-insert-immediate (arg &rest args)
+  (let ((args (cons arg args))
+        (org-roam-capture-templates (list (append org-roam-capture-templates)
+                                          `(:immediate-finish t))))
+    (apply #'org-roam-node-insert args)))
+
+(defun mla/org-roam-filter-by-tag (tag-name)
+  (maopcar #'org-roam-node-file
+           (seq-filter
+            (mla/org-roam-filter-by-tag tag-name)
+            (org-roam-list))))
+
+(defun mla/org-roam-refresh-agenda-list ()
+  (interactive)
+  (setq org-agenda-files))
+
+(use-package org-agenda
+  :config
+  (defun air-org-skip-subtree-if-priority (priority)
+    "Skip an agenda subtree if it has a priority of PRIORITY.
+
+PRIORITY may be one of the characters ?A, ?B, or ?C."
+    (let ((subtree-end (save-excursion (org-end-of-subtree t)))
+          (pri-value (* 1000 (- org-lowest-priority priority)))
+          (pri-current (org-get-priority (thing-at-point 'line t))))
+      (if (= pri-value pri-current)
+          subtree-end
+        nil)))
+  ;; (setq initial-buffer-choice (lambda () (org-agenda nil "d")
+  ;;                               (buffer-find "*Org Agenda*")))
+  (setq org-agenda-window-setup 'only-window
+        org-agenda-custom-commands
+        '(("d" "Today"
+           ((tags-todo "SCHEDULED<\"<+1d>\"&PRIORITY=\"A\"" ;Priority tasks available to do today
+                       ((org-agenda-skip-function
+                         '(org-agenda-skip-entry-if 'todo 'done))
+                        (org-agenda-overriding-header "High-priority unfinished tasks:")))
+            (agenda "" ((org-agenda-span 'day)
+                        (org-scheduled-delay-days -14)
+                        (org-agenda-overriding-header "Schedule")))
+            (tags-todo "SCHEDULED<\"<+1d>\"" ;All tasks available today
+                       ((org-agenda-skip-function
+                         '(or (org-agenda-skip-entry-if 'done)
+                              (air-org-skip-subtree-if-priority ?A)))
+                        (org-agenda-overriding-header "Tasks:"))))))))
+
+(use-package elegant-agenda-mode
+  :ensure t
+  :hook (org-agenda-mode . elegant-agenda-mode))
+
+(use-package org-alert
+  :ensure t)
+
+(use-package doct
+  :ensure t
+  :after org
+  :commands (doct)
+  :init (setq org-capture-templates
+              (doct `(("Personal" :keys "p" :children
+                       (("Todo"   :keys "t"
+                         :template ("* TODO %^{Description}"
+                                    "SCHEDULED: %U")
+                         :headline "Tasks" :file ,(concat org-directory "/personal/tasks.org"))
+                        ("Notes"  :keys "n"
+                         :template ("* %^{Description}"
+                                    ":PROPERTIES:"
+                                    ":Created: %U"
+                                    ":END:")
+                         :headline "Notes" :file ,(concat org-directory "/personal/tasks.org"))))
+                      ("Work"    :keys "w"
+                       :children
+                       (("Project / Todo"  :keys "t"
+                         :type entry
+                         :file ,(concat org-directory "/work/tasks.org")
+                         :headline "Inbox"
+                         :template ("* TODO %?"
+                                    "  FILETAGS: :project:"
+                                    "  Caputed: %U"
+                                    ))
+                        ("Meeting Minutes"
+                         :keys "m"
+                         :type entry
+                         :datetree t
+                         :file ,(concat org-directory "/work/meetings.org")
+                         :template ("* Meeting: %^{Title}"
+                                    "  Attendees: %^{Attendees}"
+                                    "  * Notes"
+                                    "    - %?"))
+                        ("Knowledge Tidbit"
+                         :keys "k"
+                         :type entry
+                         :file ,(concat org-directory "/notes.org")
+                         :headline "Quick Notes"
+                         :template ("* %^{Topic} :knowledge:"
+                                    "  Context: %?"
+                                    "  Captured: %U"))))))))
+
+
+(defun my/org-capture-close-frame-shortcut ()
+  "Close the frame after saving or aborting a capture, if spawned externally."
+  (when (string= (frame-parameter nil 'name) "emacs-capture")
+    (delete-frame)))
+
+;; Attach the frame deletion cleanup to Org Capture hooks
+(add-hook 'org-capture-after-finalize-hook #'my/org-capture-close-frame-shortcut)
+
+(use-package org-roam
+  :ensure t
+  :init
+  (setq org-roam-v2-ack t)
+  (require 'org-roam-protocol)
+  (require 'org-protocol)
+  (require 'org-roam-dailies)
+  :custom
+  (org-roam-completion-everywhere t)
+  (org-roam-directory "~/Dropbox-Decrypted/org-roam" "home of org roam")
+  (org-roam-dailies-directory "~/Dropbox-Decrypted/org-roam/daily")
+  (org-roam-capture-templates
+   '(("d" "default" plain
+      "%?"
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         "#+title: ${title}\n")
+      :unnarrowed t)))
+  (org-roam-ref-capture-templates
+   '(("d" "default" plain (function org-roam--capture-get-point)
+      "%?"
+      :file-name "${slug}"
+      :head "#+TITLE: ${title}\n"
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         "#+title: ${title}\n")
+      :unarrowed t))
+   '(("r" "ref" plain (function org-roam-capture--get-point)
+      "%?"
+      :file-name "websites/${slug}"
+      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         "#+title: ${title}\n")
+      :head "#+TITLE: ${title}
+#+ROAM_KEY: ${ref}
+- source :: ${ref}"
+      :unnarrowedwed t)))
+  :bind
+  (("C-c n l" . org-roam-buffer-toggle)
+   ("C-c n f" . org-roam-node-find)
+   ("C-c n i" . org-roam-node-insert)
+   :map org-mode-map
+   ("C-M-i" . completion-at-point))
+  :bind-keymap
+  ("C-c n d" . org-roam-dailies-map)
+  :config
+  (org-roam-db-autosync-mode))
+
+(use-package consult-org-roam
+  :ensure t
+  :init
+  (require 'consult-org-roam)
+  (consult-org-roam-mode 1)
+  :custom
+  (consult-org-roam-grep-func #'consult-igrep)
+  :bind
+  ("C-c n e" . consult-org-roam-file-find)
+  ("C-c n b" . consult-org-roam-backlinks)
+  ("C-c n r" . consult-org-roam-search))
+
+(use-package org-journal
+  :ensure t
+  :bind
+  ("C-c n j" . org-journal-new-entry)
+  :custom
+  (org-journal-dir "~/Dropbox-Decrypted/org-roam")
+  (org-journal-date-prefix "#+TITLE: ")
+  (org-journal-file-format "%Y-%m-%d.org")
+  (org-journal-date-format "%A, %d %B %Y"))
+
+(setq org-journal-enable-agenda-integration t)
+
+
+
 (use-package compat
 	     :ensure t)
+
 
 ;(use-package all-the-icons
 ;  :ensure t)
@@ -1406,281 +1683,6 @@
   :ensure t)
 
 
-(use-package org
-  :defer t
-  :ensure t
-  :bind
-  (("C-c a" . org-agenda)
-   ("C-c c" . org-capture))
-
-  :hook (org-mode . visual-line-mode)
-  :config
-  (setq org-src-tab-acts-natively nil)
-  (defun jb/org-narrow-to-parent ()
-    "Narrow buffer to the current subtree."
-    (interactive)
-    (widen)
-    (org-up-element)
-    (save-excursion
-      (save-match-data
-        (org-with-limited-levels
-         (narrow-to-region
-          (progn
-            (org-back-to-heading t) (point))
-          (progn (org-end-of-subtree t t)
-                 (when (and (org-at-heading-p) (not (eobp))) (backward-char 1))
-                 (point)))))))
-
-  (defun jb/org-clear-results ()
-    (interactive)
-    (org-babel-remove-result-one-or-many 't))
-
-  (defun run-org-block ()
-    (interactive)
-    (save-excursion
-      (goto-char
-       (org-babel-find-named-block
-        (completing-read "Code Block: " (org-babel-src-block-names))))
-      (org-babel-execute-src-block-maybe)))
-
-  (if (file-exists-p "~/Dropbox-Decrypted/org")
-      (setq org-directory "~/Dropbox-Decrypted/org")
-    (setq org-directory "~/org"))
-  (setq org-agenda-files (list
-                          (concat org-directory "/agenda.org")
-                          (concat org-directory "/work/calendar.org")
-                          (concat org-directory "/work/tasks.org")
-                          (concat org-directory "/personal/calendar.org")
-                          (concat org-directory "/personal/tasks.org"))
-
-        org-todo-keywords
-        '((sequence "TODO(t)" "INPROGRESS(i)" "|" "DONE(d)")
-          ("WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))
-
-        org-todo-keyword-faces
-        '(("TODO" :foreground "red" :weight regular)
-          ("INPROGRESS" :foreground "blue" :weight regular)
-          ("DONE" :foreground "forest green" :weight regular)
-          ("WAITING" :foreground "orange" :weight regular)
-          ("BLOCKED" :foreground "magenta" :weight regular)
-          ("CANCELLED" :foreground "forest green" :weight regular))
-        org-log-into-drawer 't
-        org-startup-truncated nil
-        org-default-notes-file (concat org-directory "/notes.org")
-        org-export-html-postamble nil
-        org-hide-leading-stars 't
-        org-startup-folded 'overview
-        org-startup-indented 't)
-  ;; Add ts language support
-  (add-to-list 'org-src-lang-modes '("tsx" . tsx-ts))
-  (add-to-list 'org-src-lang-modes '("typescript" . typescript-ts))
-  (add-to-list 'org-src-lang-modes '("jsx" . jsx-ts))
-  (add-to-list 'org-src-lang-modes '("javascript" . javascript-ts))
-  (add-to-list 'org-src-lang-modes '("ruby" . ruby-ts))
-  (add-to-list 'org-src-lang-modes '("dot" . graphviz-dot))
-  (run-at-time "1 min" nil (lambda ()
-                             (org-babel-do-load-languages 'org-babel-load-languages
-                                                          '((shell . t)
-                                                            (dot . t)
-                                                            (js . t)
-                                                            (sql . t)
-                                                            (python . t)
-                                                            (ruby . t))))))
-
-(use-package org-pdftools
-  :ensure t
-  :after org)
-
-(use-package toc-org
-  :ensure t
-  :hook (org-mode . toc-org-mode))
-
-(use-package org-modern
-  :ensure t
-  :hook (org-mode . org-modern-mode))
-
-(use-package org-ref
-  :ensure t
-  )
-
-
-
-(defun org-roam-node-insert-immediate (arg &rest args)
-  (let ((args (cons arg args))
-        (org-roam-capture-templates (list (append org-roam-capture-templates)
-                                          `(:immediate-finish t))))
-    (apply #'org-roam-node-insert args)))
-
-(defun mla/org-roam-filter-by-tag (tag-name)
-  (maopcar #'org-roam-node-file
-           (seq-filter
-            (mla/org-roam-filter-by-tag tag-name)
-            (org-roam-list))))
-
-(defun mla/org-roam-refresh-agenda-list ()
-  (interactive)
-  (setq org-agenda-files))
-
-(use-package org-agenda
-  :config
-  (defun air-org-skip-subtree-if-priority (priority)
-    "Skip an agenda subtree if it has a priority of PRIORITY.
-
-PRIORITY may be one of the characters ?A, ?B, or ?C."
-    (let ((subtree-end (save-excursion (org-end-of-subtree t)))
-          (pri-value (* 1000 (- org-lowest-priority priority)))
-          (pri-current (org-get-priority (thing-at-point 'line t))))
-      (if (= pri-value pri-current)
-          subtree-end
-        nil)))
-  ;; (setq initial-buffer-choice (lambda () (org-agenda nil "d")
-  ;;                               (buffer-find "*Org Agenda*")))
-  (setq org-agenda-window-setup 'only-window
-        org-agenda-custom-commands
-        '(("d" "Today"
-           ((tags-todo "SCHEDULED<\"<+1d>\"&PRIORITY=\"A\"" ;Priority tasks available to do today
-                       ((org-agenda-skip-function
-                         '(org-agenda-skip-entry-if 'todo 'done))
-                        (org-agenda-overriding-header "High-priority unfinished tasks:")))
-            (agenda "" ((org-agenda-span 'day)
-                        (org-scheduled-delay-days -14)
-                        (org-agenda-overriding-header "Schedule")))
-            (tags-todo "SCHEDULED<\"<+1d>\"" ;All tasks available today
-                       ((org-agenda-skip-function
-                         '(or (org-agenda-skip-entry-if 'done)
-                              (air-org-skip-subtree-if-priority ?A)))
-                        (org-agenda-overriding-header "Tasks:"))))))))
-
-(use-package elegant-agenda-mode
-  :ensure t
-  :hook (org-agenda-mode . elegant-agenda-mode))
-
-(use-package org-alert
-  :ensure t)
-
-(use-package doct
-  :ensure t
-  :after org
-  :commands (doct)
-  :init (setq org-capture-templates
-              (doct `(("Personal" :keys "p" :children
-                       (("Todo"   :keys "t"
-                         :template ("* TODO %^{Description}"
-                                    "SCHEDULED: %U")
-                         :headline "Tasks" :file ,(concat org-directory "/personal/tasks.org"))
-                        ("Notes"  :keys "n"
-                         :template ("* %^{Description}"
-                                    ":PROPERTIES:"
-                                    ":Created: %U"
-                                    ":END:")
-                         :headline "Notes" :file ,(concat org-directory "/personal/tasks.org"))
-                        ("Appointment"  :keys "a"
-                         :template ("* %^{Description}"
-                                    "SCHEDULED: %T"
-                                    ":PROPERTIES:"
-                                    ":calendar-id: justincbarclay@gmail.com"
-                                    ":END:")
-                                    :file ,(concat org-directory "/personal/calendar.org"))
-                        ("Emails" :keys "e"
-                         :template "* TODO [#A] Reply: %a :@home:"
-                         :headline "Emails" :file "~/org/personal/tasks.org")))
-
-                      ("Work"    :keys "w"
-                       :children
-                       (("Todo"  :keys "t"
-                         :template ("* TODO %^{Description}"
-                                    ":PROPERTIES:"
-                                    ":Scheduled: %U"
-                                    ":END:")
-                         :headline "Tasks" :file ,(concat org-directory "/work/tasks.org"))
-                        ("Notes"  :keys "n"
-                         :template ("* %^{Description}"
-                                    ":PROPERTIES:"
-                                    ":Created: %U"
-                                    ":END:")
-                         :headline "Notes" :file ,(concat org-directory "/work/tasks.org"))
-                        ("Emails" :keys "e"
-                         :template "* TODO [#A] Reply: %a :@work:"
-                         :headline "Emails" :file ,(concat org-directory "/work/tasks.org"))
-                        ("Trello" :keys "r"
-                         :template ("* TODO [#B] %a " "SCHEDULED: %U")
-                         :headline "Tasks" :file ,(concat org-directory "/work/tasks.org"))
-                        ("Appointment"  :keys "a"
-                         :template ("* %^{Description}"
-                                    "SCHEDULED: %T"
-                                    ":PROPERTIES:"
-                                    ":calendar-id: justin.barclay@tidalcloud.com"
-                                    ":END:")
-                         :file ,(concat org-directory "/work/calendar.org"))))))))
-
-(use-package org-roam
-  :ensure t
-  :init
-  (setq org-roam-v2-ack t)
-  (require 'org-roam-protocol)
-  (require 'org-protocol)
-  (require 'org-roam-dailies)
-  :custom
-  (org-roam-completion-everywhere t)
-  (org-roam-directory "~/Dropbox-Decrypted/org-roam" "home of org roam")
-  (org-roam-dailies-directory "~/Dropbox-Decrypted/org-roam/daily")
-  (org-roam-capture-templates
-   '(("d" "default" plain
-      "%?"
-      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                         "#+title: ${title}\n")
-      :unnarrowed t)))
-  (org-roam-ref-capture-templates
-   '(("d" "default" plain (function org-roam--capture-get-point)
-      "%?"
-      :file-name "${slug}"
-      :head "#+TITLE: ${title}\n"
-      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                         "#+title: ${title}\n")
-      :unarrowed t))
-   '(("r" "ref" plain (function org-roam-capture--get-point)
-      "%?"
-      :file-name "websites/${slug}"
-      :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
-                         "#+title: ${title}\n")
-      :head "#+TITLE: ${title}
-#+ROAM_KEY: ${ref}
-- source :: ${ref}"
-      :unnarrowedwed t)))
-  :bind
-  (("C-c n l" . org-roam-buffer-toggle)
-   ("C-c n f" . org-roam-node-find)
-   ("C-c n i" . org-roam-node-insert)
-   :map org-mode-map
-   ("C-M-i" . completion-at-point))
-  :bind-keymap
-  ("C-c n d" . org-roam-dailies-map)
-  :config
-  (org-roam-db-autosync-mode))
-
-(use-package consult-org-roam
-  :ensure t
-  :init
-  (require 'consult-org-roam)
-  (consult-org-roam-mode 1)
-  :custom
-  (consult-org-roam-grep-func #'consult-igrep)
-  :bind
-  ("C-c n e" . consult-org-roam-file-find)
-  ("C-c n b" . consult-org-roam-backlinks)
-  ("C-c n r" . consult-org-roam-search))
-
-(use-package org-journal
-  :ensure t
-  :bind
-  ("C-c n j" . org-journal-new-entry)
-  :custom
-  (org-journal-dir "~/Dropbox-Decrypted/org-roam")
-  (org-journal-date-prefix "#+TITLE: ")
-  (org-journal-file-format "%Y-%m-%d.org")
-  (org-journal-date-format "%A, %d %B %Y"))
-
-(setq org-journal-enable-agenda-integration t)
 
 
 (use-package editorconfig
