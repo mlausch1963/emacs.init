@@ -1488,6 +1488,15 @@ PRIORITY may be one of the characters ?A, ?B, or ?C."
          (lsp-mode . lsp-lens-mode)))
 
 
+(with-eval-after-load 'lsp-pylsp
+  ;; 1. Enable/Disable specific plugins
+  (setq lsp-pylsp-plugins-autopep8-enabled nil) ; Disable autopep8
+  (setq lsp-pylsp-plugins-pycodestyle-enabled nil) ; Disable legacy pycodestyle
+  (setq lsp-pylsp-plugins-ruff-enabled t) ; Enable Ruff plugin (if installed)
+  ;; 2. Pass specific plugin configurations
+  (setq lsp-pylsp-plugins-pydocstyle-convention "google")
+  (setq lsp-pylsp-plugins-flake8-max-line-length 100))
+
 
 (use-package lsp-ui
   :ensure t
